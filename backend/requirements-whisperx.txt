@@ -1,0 +1,10 @@
+# MeetingMind WhisperX smoke-test environment
+# CUDA-enabled PyTorch pair used on this machine:
+# python -m pip install torch==2.8.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cu128
+whisperx==3.8.6
+
+# Windows runtime note:
+# TorchCodec supports the FFmpeg 4-7 ABI in this setup. The smoke test
+# automatically locates the installed BtbN FFmpeg 7.x package and registers
+# its bin directory, the PyTorch DLL directory, and the torchcodec directory
+# before importing WhisperX.

@@ -1,0 +1,31 @@
+{
+  "fixture_id": "02_disagreement_uncertain",
+  "provider": "openai",
+  "model": "gpt-5.6-terra",
+  "prompt_version": "meeting_analysis_v1",
+  "analysis": {
+    "summary": "会议未确认是否增加全文搜索；当前暂不决定，计划下次会议再评估。王五将整理成本和收益并发到群里。",
+    "decisions": [
+      {
+        "content": "全文搜索方案暂不决定，下次会议再评估。",
+        "status": "UNRESOLVED",
+        "evidence_text": "全文搜索方案暂不决定，下次会议再评估。",
+        "evidence_start_ms": 8100
+      }
+    ],
+    "action_items": [
+      {
+        "content": "整理全文搜索的成本和收益，并发到群里。",
+        "assignee": "王五",
+        "assignee_status": "INFERRED",
+        "due_date_raw": "尽快",
+        "due_at": null,
+        "due_precision": null,
+        "due_date_status": "AMBIGUOUS",
+        "status": "TODO",
+        "evidence_text": "我来整理全文搜索的成本和收益，尽快发到群里。",
+        "evidence_start_ms": 12300
+      }
+    ]
+  }
+}

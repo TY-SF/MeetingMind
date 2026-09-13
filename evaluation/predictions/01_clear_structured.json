@@ -1,0 +1,31 @@
+{
+  "fixture_id": "01_clear_structured",
+  "provider": "openai",
+  "model": "gpt-5.6-terra",
+  "prompt_version": "meeting_analysis_v1",
+  "analysis": {
+    "summary": "后端技术评审确定采用 FastAPI 和 MySQL 8，接口文档由张三负责并于9月11日前完成。",
+    "decisions": [
+      {
+        "content": "后端采用 FastAPI 和 MySQL 8。",
+        "status": "CONFIRMED",
+        "evidence_text": "今天确定后端采用 FastAPI 和 MySQL 8，这个方案正式通过。",
+        "evidence_start_ms": 0
+      }
+    ],
+    "action_items": [
+      {
+        "content": "完成接口文档",
+        "assignee": "张三",
+        "assignee_status": "EXPLICIT",
+        "due_date_raw": "9月11日",
+        "due_at": "2026-09-11T15:59:59+00:00",
+        "due_precision": "DAY",
+        "due_date_status": "CONFIRMED",
+        "status": "TODO",
+        "evidence_text": "接口文档由张三负责，截止到9月11日。",
+        "evidence_start_ms": 5200
+      }
+    ]
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "metrics": {
+    "sample_count": 3,
+    "structured_output_success_rate": 1.0,
+    "action_item_precision": 1.0,
+    "action_item_recall": 1.0,
+    "assignee_accuracy": 1.0,
+    "assignee_status_accuracy": 1.0,
+    "due_date_accuracy": 1.0,
+    "decision_status_accuracy": 1.0
+  },
+  "totals": {
+    "expected_decisions": 3,
+    "matched_decisions": 3,
+    "correct_decision_statuses": 3,
+    "expected_actions": 3,
+    "predicted_actions": 3,
+    "matched_actions": 3,
+    "matched_predicted_actions": 3,
+    "assignee_checks": 3,
+    "correct_assignees": 3,
+    "assignee_status_checks": 3,
+    "correct_assignee_statuses": 3,
+    "due_date_checks": 3,
+    "correct_due_dates": 3
+  },
+  "cases": [
+    {
+      "id": "01_clear_structured",
+      "structured_output_success": true,
+      "counts": {
+        "expected_decisions": 1,
+        "matched_decisions": 1,
+        "correct_decision_statuses": 1,
+        "expected_actions": 1,
+        "predicted_actions": 1,
+        "matched_actions": 1,
+        "matched_predicted_actions": 1,
+        "assignee_checks": 1,
+        "correct_assignees": 1,
+        "assignee_status_checks": 1,
+        "correct_assignee_statuses": 1,
+        "due_date_checks": 1,
+        "correct_due_dates": 1
+      }
+    },
+    {
+      "id": "02_disagreement_uncertain",
+      "structured_output_success": true,
+      "counts": {
+        "expected_decisions": 1,
+        "matched_decisions": 1,
+        "correct_decision_statuses": 1,
+        "expected_actions": 1,
+        "predicted_actions": 1,
+        "matched_actions": 1,
+        "matched_predicted_actions": 1,
+        "assignee_checks": 1,
+        "correct_assignees": 1,
+        "assignee_status_checks": 1,
+        "correct_assignee_statuses": 1,
+        "due_date_checks": 1,
+        "correct_due_dates": 1
+      }
+    },
+    {
+      "id": "03_noise_overlap_english",
+      "structured_output_success": true,
+      "counts": {
+        "expected_decisions": 1,
+        "matched_decisions": 1,
+        "correct_decision_statuses": 1,
+        "expected_actions": 1,
+        "predicted_actions": 1,
+        "matched_actions": 1,
+        "matched_predicted_actions": 1,
+        "assignee_checks": 1,
+        "correct_assignees": 1,
+        "assignee_status_checks": 1,
+        "correct_assignee_statuses": 1,
+        "due_date_checks": 1,
+        "correct_due_dates": 1
+      }
+    }
+  ],
+  "limitations": "三组受控样本用于回归，不代表生产环境统计性能。"
+}

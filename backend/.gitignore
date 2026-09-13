@@ -1,0 +1,10 @@
+__pycache__/
+.pytest_cache/
+*.pyc
+.venv/
+data/runtime/
+data/meetings/
+data/phase2_real_test/
+.env
+.env.*
+!.env.example

@@ -1,0 +1,28 @@
+{
+  "name": "meetingmind-frontend",
+  "private": true,
+  "version": "0.5.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
+    "element-plus": "^2.10.4",
+    "pinia": "^3.0.3",
+    "vue": "^3.5.18",
+    "vue-router": "^4.5.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/test-utils": "^2.5.0",
+    "jsdom": "^29.1.1",
+    "typescript": "~5.8.3",
+    "vite": "^7.1.2",
+    "vitest": "^5.0.0",
+    "vue-tsc": "^2.2.12"
+  }
+}

@@ -1,0 +1,39 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: meetingmind-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-meetingmind}
+      MYSQL_USER: ${MYSQL_USER:-meetingmind}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env.compose}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env.compose}
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - meetingmind_mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: meetingmind-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - meetingmind_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  meetingmind_mysql:
+  meetingmind_redis:

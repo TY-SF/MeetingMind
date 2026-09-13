@@ -1,0 +1,37 @@
+{
+  "fixture_id": "03_noise_overlap_english",
+  "provider": "openai",
+  "model": "gpt-5.6-terra",
+  "prompt_version": "meeting_analysis_v1",
+  "analysis": {
+    "summary": "会议确认 RC 计划于 2026 年 9 月 12 日 18:00 发布；若 API 回归失败则延期。",
+    "decisions": [
+      {
+        "content": "Release Candidate 按计划发布。",
+        "status": "CONFIRMED",
+        "evidence_text": "Release Candidate 的 go no-go 结论是按计划发布。",
+        "evidence_start_ms": 0
+      },
+      {
+        "content": "RC 于 2026 年 9 月 12 日 18:00 发布；如果回归失败则延期。",
+        "status": "CONFIRMED",
+        "evidence_text": "现在确认2026年9月12日18点发布 RC；如果回归失败再延期。",
+        "evidence_start_ms": 12400
+      }
+    ],
+    "action_items": [
+      {
+        "content": "完成 API regression。",
+        "assignee": "刘洋",
+        "assignee_status": "EXPLICIT",
+        "due_date_raw": "明天",
+        "due_at": "2026-09-10T15:59:59+00:00",
+        "due_precision": "DAY",
+        "due_date_status": "CONFIRMED",
+        "status": "TODO",
+        "evidence_text": "刘洋负责完成 API regression，截止日期是明天。",
+        "evidence_start_ms": 5400
+      }
+    ]
+  }
+}

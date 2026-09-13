@@ -1,0 +1,45 @@
+# Secrets and local runtime configuration
+.env
+.env.*
+!.env.example
+backend/.env/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+backend/.venv/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+
+# Local runtime data, models, recordings and generated meeting artifacts
+backend/data/
+data/
+backend/meetings/
+*.mp3
+*.wav
+*.m4a
+*.mp4
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Test, coverage and tool outputs
+.coverage
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+*.log
+
+# Docker Compose local credentials
+.env.compose
+
+# Local meeting records and generated transcripts
+meetings/
