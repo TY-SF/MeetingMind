@@ -4,6 +4,10 @@
 
 前端页面只通过 Pinia Store 和 `MeetingApi` 访问数据；默认实现为 `frontend/src/api/httpApi.ts`，不再使用 Mock API。
 
+## 部署级访问控制
+
+配置 `MEETINGMIND_API_TOKEN` 后，除 `/health`、`/health/ready`、`/auth/status` 和 OpenAPI 文档外，所有业务请求必须发送 Bearer 令牌。前端从 `sessionStorage` 读取令牌并注入 `Authorization`，不会将令牌编译进静态资源。401 使用稳定错误码 `ACCESS_TOKEN_REQUIRED` / `ACCESS_TOKEN_INVALID`。该令牌不是用户身份或角色授权。
+
 ## 会议与任务
 
 - `GET /api/v1/meetings`：获取会议列表
@@ -32,7 +36,7 @@ Vite 默认将 `/api` 代理至 `http://127.0.0.1:8000`。如果后端地址不�
 VITE_API_BASE_URL=http://你的后端地址/api/v1
 ```
 
-后端允许 `FRONTEND_ORIGIN` 中配置的来源访问 API。真实 API Key 只留在后端 `backend/.env/meetingmind.env`，前端不会读取或保存该密钥。
+后端允许 `FRONTEND_ORIGIN` 中配置的来源访问 API，并显式允许 `Authorization` 请求头。真实 API Key 只留在后端 `backend/.env/meetingmind.env`，前端不会读取或保存该密钥。
 
 ## 第五阶段：说话人与导出
 

@@ -76,6 +76,7 @@ class Settings:
     diarization_enabled: bool
     diarization_model: str
     frontend_origin: str
+    api_access_token: str | None
     redis_url: str
     rq_queue_name: str
     rq_job_timeout_seconds: int
@@ -115,6 +116,9 @@ class Settings:
             data_dir = configured_data_dir if configured_data_dir.is_absolute() else root.parent / configured_data_dir
         else:
             data_dir = root.parent / "data"
+        api_access_token = env_value("MEETINGMIND_API_TOKEN", file_values)
+        if api_access_token and len(api_access_token) < 32:
+            raise ValueError("MEETINGMIND_API_TOKEN 至少需要 32 个字符")
         return cls(
             database_url=resolve_database_url(file_values, data_dir),
             data_dir=data_dir,
@@ -131,6 +135,7 @@ class Settings:
                 "MEETINGMIND_DIARIZATION_MODEL", file_values, "pyannote/speaker-diarization-community-1"
             ) or "pyannote/speaker-diarization-community-1",
             frontend_origin=env_value("FRONTEND_ORIGIN", file_values, "http://localhost:5173") or "http://localhost:5173",
+            api_access_token=api_access_token,
             redis_url=env_value("REDIS_URL", file_values, "redis://127.0.0.1:6379/0") or "redis://127.0.0.1:6379/0",
             rq_queue_name=env_value("RQ_QUEUE_NAME", file_values, "meetingmind") or "meetingmind",
             rq_job_timeout_seconds=int(env_value("RQ_JOB_TIMEOUT_SECONDS", file_values, "7200") or "7200"),

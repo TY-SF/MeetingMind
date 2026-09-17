@@ -22,7 +22,8 @@ $testEnvironmentNames = @(
     'MYSQL_PORT',
     'MYSQL_DATABASE',
     'MYSQL_USER',
-    'MYSQL_PASSWORD'
+    'MYSQL_PASSWORD',
+    'MEETINGMIND_API_TOKEN'
 )
 
 function Write-Pass([string]$message) { Write-Host "[PASS] $message" -ForegroundColor Green; $script:checks.Add([pscustomobject]@{ name = $message; status = 'pass' }) }
@@ -43,6 +44,8 @@ function Invoke-IsolatedBackendCheck([string]$name, [scriptblock]$action) {
         $saved[$nameToClear] = [Environment]::GetEnvironmentVariable($nameToClear, 'Process')
         [Environment]::SetEnvironmentVariable($nameToClear, $null, 'Process')
     }
+    $isolatedEnvFile = Join-Path $env:TEMP 'meetingmind-isolated-test-missing.env'
+    [Environment]::SetEnvironmentVariable('MEETINGMIND_ENV_FILE', $isolatedEnvFile, 'Process')
     try {
         Invoke-External $name $action
     } finally {
@@ -115,7 +118,11 @@ try {
         $values.ContainsKey($_) -and $values[$_] -and $values[$_] -notmatch '请填写|change-me'
     }
     if (-not $hasExplicitUrl -and ($hasMysqlFields -contains $false)) { throw '数据库连接字段未完整填写' }
-    Write-Pass '本地配置字段存在（未输出敏感值）'
+    if (-not $values.ContainsKey('MEETINGMIND_API_TOKEN') -or $values['MEETINGMIND_API_TOKEN'].Length -lt 32) {
+        throw 'MEETINGMIND_API_TOKEN 未配置或少于 32 个字符'
+    }
+    $apiHeaders = @{ Authorization = "Bearer $($values['MEETINGMIND_API_TOKEN'])" }
+    Write-Pass '本地配置字段和部署级访问令牌存在（未输出敏感值）'
 } catch {
     Write-Fail "本地配置检查：$($_.Exception.Message)"
 }
@@ -152,7 +159,7 @@ if (-not $SkipLiveServer) {
     }
 
     try {
-        $queue = Invoke-RestMethod 'http://127.0.0.1:8000/api/v1/health/queue' -TimeoutSec 10
+        $queue = Invoke-RestMethod 'http://127.0.0.1:8000/api/v1/health/queue' -Headers $apiHeaders -TimeoutSec 10
         if ($queue.redis -ne 'ok') { throw "Redis 状态异常：$($queue.redis)" }
         if (-not $queue.worker_online) { throw 'RQ Worker 未在线；发布前不能接受会被伪装为已排队的任务' }
         if ($queue.status -ne 'ready') { throw "队列状态异常：$($queue.status)" }
@@ -189,8 +196,10 @@ if (-not $SkipLiveServer) {
         $analysisProperties = $spec.components.schemas.$analysisSchemaName.properties.PSObject.Properties.Name
         if ($analysisProperties -notcontains 'analysis_data_confirmed') { throw 'OpenAPI AI 分析契约缺少 analysis_data_confirmed' }
 
+        if (-not $spec.components.securitySchemes.BearerAuth) { throw 'OpenAPI 缺少 BearerAuth 安全方案' }
+        if (-not $spec.paths.'/api/v1/meetings'.get.security) { throw 'OpenAPI 会议接口未声明访问令牌要求' }
         if ($spec.info.title -ne 'MeetingMind API' -or -not $spec.tags) { throw 'OpenAPI 元数据或分组缺失' }
-        Write-Pass '运行中 OpenAPI 文档与关键契约'
+        Write-Pass '运行中 OpenAPI 文档、访问控制与关键契约'
     } catch {
         Write-Fail "OpenAPI 检查：$($_.Exception.Message)"
     }

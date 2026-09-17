@@ -2,9 +2,9 @@
 
 隐私、数据外发和无自动脱敏边界见 `D:\MeetingMind\docs\隐私与数据边界.md`。上传和每次 AI 分析都要求显式确认。
 
-## 当前阶段：第七阶段本地单机发布候选
+## 当前阶段：第八阶段部署边界加固
 
-截至 2026 年 9 月 17 日，第一至第六阶段已完成；第七阶段的发布门禁、真实运行态验收、故障恢复验收和版本化发布记录已完成。已验证：
+截至 2026 年 9 月 17 日，第一至第七阶段已完成；第八阶段的部署级访问控制已完成，下一项为 HTTPS/反向代理。已验证：
 
 - OpenAI Responses API Provider 抽象
 - Pydantic 严格结构化输出 Schema
@@ -21,7 +21,7 @@
 - 真实中文 MP3 的 WhisperX 转录 → OpenAI 结构化分析 → MySQL 持久化
 - 真实人工审核 PATCH、过期版本 `409` 与测试记录删除验证
 
-当前自动化测试结果：`53 passed`（2026 年 9 月 17 日隐私边界发布检查）。
+当前自动化测试结果：`57 passed`（2026 年 9 月 17 日访问控制检查）。
 
 ## 数据库
 
@@ -55,6 +55,14 @@ backend\.venv\Scripts\python.exe scripts\migrate_runtime_layout.py --apply
 ```text
 D:\MeetingMind\backend\.env\meetingmind.env
 ```
+
+发布配置必须生成至少 32 个字符的高熵访问令牌：
+
+```env
+MEETINGMIND_API_TOKEN=本机生成的随机值
+```
+
+业务 API 要求 `Authorization: Bearer <token>`；健康存活、数据库就绪、认证状态和 OpenAPI 文档保持公开。完整说明见 `D:\MeetingMind\docs\访问控制与部署边界.md`。
 
 MySQL 配置：
 
@@ -94,7 +102,7 @@ backend\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
 
 ## 启动 API
 
-开发环境已允许 `FRONTEND_ORIGIN` 配置的前端跨域请求；Vite 同时将 `/api` 默认代理至 `http://127.0.0.1:8000`。
+开发环境已允许 `FRONTEND_ORIGIN` 配置的前端跨域请求，并允许 `Authorization` 请求头；Vite 同时将 `/api` 默认代理至 `http://127.0.0.1:8000`。
 
 ```powershell
 cd D:\MeetingMind
@@ -207,7 +215,7 @@ MP3 上传 → FFmpeg/WhisperX 转录（42,121 ms，3 个片段）
 ## 当前边界
 
 - 前端已在开发环境默认通过 Vite `/api` 代理调用真实后端；请在 `D:\MeetingMind\frontend` 执行 `npm run dev`。
-- 生产部署仍需单独配置前端静态托管、反向代理和跨域来源。
+- 当前已提供单一部署级访问令牌，但仍需单独配置 HTTPS、前端静态托管、反向代理和受限跨域来源；多人环境还需要正式身份和角色授权。
 - 生产任务使用 Redis + RQ；Windows Worker 通过 `scripts\start_rq_worker.ps1` 默认以兼容 RQ 2.6.x 的 `rq.worker.SimpleWorker` 启动；Linux/macOS 使用 `rq.worker.SpawnWorker`。需要后台常驻时使用 `scripts\start_rq_worker_background.ps1`。
 - API 仅创建任务，实际音频处理在独立 Worker 中执行；Redis 不可用时 API 返回稳定错误码。
 

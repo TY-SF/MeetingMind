@@ -10,6 +10,18 @@ MeetingMind 的 API 契约由 FastAPI 在运行时生成。以运行中服务的
 | ReDoc | `http://127.0.0.1:8000/redoc` | 阅读型 API 参考 |
 | OpenAPI JSON | `http://127.0.0.1:8000/openapi.json` | 前端、测试或其他工具读取的机器可读契约 |
 
+## 访问令牌
+
+真实发布配置设置 `MEETINGMIND_API_TOKEN` 后，除存活、就绪和认证状态外，业务接口都要求：
+
+```http
+Authorization: Bearer <token>
+```
+
+Swagger UI 可点击 **Authorize** 输入令牌。`GET /api/v1/auth/status` 只返回是否要求令牌和当前请求是否已认证，不返回密钥。缺失或错误分别返回 `401 ACCESS_TOKEN_REQUIRED`、`401 ACCESS_TOKEN_INVALID`。
+
+前端令牌只保存在当前浏览器会话中。Bearer 令牌不能替代 HTTPS；非本机网络部署必须先配置 TLS。详见 `docs/访问控制与部署边界.md`。
+
 ## 数据边界
 
 - 音频规范化、WhisperX 转录与 pyannote 说话人分离在本机执行。

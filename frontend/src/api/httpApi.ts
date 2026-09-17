@@ -1,3 +1,4 @@
+import { authorizationHeader, notifyAccessTokenRequired } from './accessToken'
 import type { MeetingApi } from '@/types/api'
 import type {
   ActionItem,
@@ -122,13 +123,17 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   let response: Response
   try {
-    response = await fetch(`${apiBaseUrl}${path}`, { ...init, headers: { Accept: 'application/json', ...init.headers } })
+    response = await fetch(`${apiBaseUrl}${path}`, {
+      ...init,
+      headers: { Accept: 'application/json', ...authorizationHeader(), ...init.headers },
+    })
   } catch {
     throw new Error('无法连接后端服务。请确认 MeetingMind 后端已启动。')
   }
 
   if (response.status === 204) return undefined as T
   const payload: unknown = await response.json().catch(() => null)
+  handleAuthenticationFailure(payload, response.status)
   if (!response.ok) throw new Error(readErrorMessage(payload, response.status))
   return payload as T
 }
@@ -136,12 +141,13 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 async function download(path: string, fallbackFilename: string): Promise<void> {
   let response: Response
   try {
-    response = await fetch(`${apiBaseUrl}${path}`, { headers: { Accept: '*/*' } })
+    response = await fetch(`${apiBaseUrl}${path}`, { headers: { Accept: '*/*', ...authorizationHeader() } })
   } catch {
     throw new Error('无法连接后端服务。请确认 MeetingMind 后端已启动。')
   }
   if (!response.ok) {
     const payload: unknown = await response.json().catch(() => null)
+    handleAuthenticationFailure(payload, response.status)
     throw new Error(readErrorMessage(payload, response.status))
   }
   const blob = await response.blob()
@@ -162,6 +168,14 @@ function filenameFromDisposition(header: string | null): string | null {
     try { return decodeURIComponent(encoded) } catch { return null }
   }
   return header.match(/filename="?([^";]+)"?/i)?.[1] || null
+}
+
+function handleAuthenticationFailure(payload: unknown, status: number): void {
+  if (status !== 401 || !isRecord(payload) || !isRecord(payload.detail)) return
+  const code = typeof payload.detail.code === 'string' ? payload.detail.code : ''
+  if (code === 'ACCESS_TOKEN_REQUIRED' || code === 'ACCESS_TOKEN_INVALID') {
+    notifyAccessTokenRequired(code === 'ACCESS_TOKEN_INVALID')
+  }
 }
 
 function readErrorMessage(payload: unknown, status: number): string {

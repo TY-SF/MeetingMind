@@ -13,14 +13,16 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
-from fastapi import Body, FastAPI, File, Form, HTTPException, UploadFile, status
+from fastapi import Body, FastAPI, File, Form, HTTPException, Request, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
 from fastapi.responses import Response
 
 from .audio_processor import AudioProcessingError, transcribe_audio, validate_audio_file
+from .auth import AccessTokenMiddleware, PUBLIC_API_PATHS, token_matches
 from .config import Settings
 from .db import MeetingDeletionError, OptimisticLockError, SqlAlchemyStore
-from .schemas import AnalysisAudit, CreateMeetingResponse, HealthResponse, Meeting, MeetingAnalysis, ProcessingJob, QueueHealthResponse, UpdateAnalysisInput, UpdateSpeakersInput
+from .schemas import AnalysisAudit, AuthStatusResponse, CreateMeetingResponse, HealthResponse, Meeting, MeetingAnalysis, ProcessingJob, QueueHealthResponse, UpdateAnalysisInput, UpdateSpeakersInput
 from .services.analysis import AnalysisInputTooLong, AnalysisProviderError, MeetingAnalysisDraft, MeetingAnalysisService, OpenAIAnalysisProvider, normalize_draft
 from .services.exports import render_ics, render_markdown
 from .observability import RequestIdMiddleware, configure_logging
@@ -354,7 +356,8 @@ def create_app(data_dir: Path | None = None, database_url: str | None = None) ->
         description=(
             "MeetingMind 在本机执行音频规范化、WhisperX 转录和 pyannote 说话人分离。"
             "只有在调用 AI 分析接口时，已保存的转录文本才会发送至配置的模型服务；原始音频不会发送。"
-            "系统不会自动脱敏，上传前必须确认已获得录音处理授权，调用 AI 前必须确认转录内容适合外发。\n\n"
+            "系统不会自动脱敏，上传前必须确认已获得录音处理授权，调用 AI 前必须确认转录内容适合外发。"
+            "部署者可通过 `MEETINGMIND_API_TOKEN` 为业务 API 启用 Bearer 访问令牌。\n\n"
             "处理任务为异步任务：上传接口返回 `202 Accepted` 后，请轮询任务接口直到阶段为 "
             "`SUCCEEDED` 或 `FAILED`。若说话人分离不可用，转录会保留，任务以 "
             "`SUCCEEDED_WITH_WARNINGS` 和 `diarization_status=DEGRADED` 标识降级。"
@@ -364,13 +367,14 @@ def create_app(data_dir: Path | None = None, database_url: str | None = None) ->
     )
     allowed_origins = [origin.strip() for origin in settings.frontend_origin.split(",") if origin.strip()]
     configure_logging(settings.log_level)
+    app.add_middleware(AccessTokenMiddleware, access_token=settings.api_access_token)
     app.add_middleware(RequestIdMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allowed_origins,
         allow_credentials=False,
         allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-        allow_headers=["Content-Type", "X-Request-ID"],
+        allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
     )
     app.state.store = store
     app.state.settings = settings
@@ -379,6 +383,19 @@ def create_app(data_dir: Path | None = None, database_url: str | None = None) ->
     @app.get("/api/v1/health", response_model=HealthResponse, tags=["健康检查"], summary="检查 API 存活")
     async def health() -> HealthResponse:
         return HealthResponse(status="ok", service="meetingmind-backend", phase="phase-7")
+
+    @app.get(
+        "/api/v1/auth/status",
+        response_model=AuthStatusResponse,
+        tags=["健康检查"],
+        summary="检查业务 API 是否启用访问令牌",
+        description="该端点不返回令牌本身，只告知当前请求是否已经通过部署级 Bearer 令牌认证。",
+    )
+    async def auth_status(request: Request) -> AuthStatusResponse:
+        return AuthStatusResponse(
+            required=bool(settings.api_access_token),
+            authenticated=token_matches(request.headers.get("Authorization"), settings.api_access_token),
+        )
 
     @app.get("/api/v1/health/ready", response_model=HealthResponse, tags=["健康检查"], summary="检查数据库是否就绪", responses={503: {"description": "数据库尚未就绪"}})
     async def readiness() -> HealthResponse:
@@ -785,6 +802,37 @@ def create_app(data_dir: Path | None = None, database_url: str | None = None) ->
             raise HTTPException(status_code=500, detail={"code": "FILE_DELETE_FAILED", "message": str(exc)}) from exc
         if not deleted:
             raise HTTPException(status_code=404, detail="会议不存在或已被删除")
+
+    if settings.api_access_token:
+        def secured_openapi() -> dict[str, Any]:
+            if app.openapi_schema:
+                return app.openapi_schema
+            schema = get_openapi(
+                title=app.title,
+                version=app.version,
+                summary=app.summary,
+                description=app.description,
+                routes=app.routes,
+                tags=app.openapi_tags,
+            )
+            schema.setdefault("components", {}).setdefault("securitySchemes", {})["BearerAuth"] = {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "opaque deployment token",
+                "description": "在后端 MEETINGMIND_API_TOKEN 中配置的部署级访问令牌。",
+            }
+            for path, path_item in schema.get("paths", {}).items():
+                if path in PUBLIC_API_PATHS:
+                    continue
+                for method, operation in path_item.items():
+                    if method.lower() not in {"get", "post", "patch", "put", "delete"}:
+                        continue
+                    operation["security"] = [{"BearerAuth": []}]
+                    operation.setdefault("responses", {})["401"] = {"description": "缺少或提供了无效的访问令牌"}
+            app.openapi_schema = schema
+            return schema
+
+        app.openapi = secured_openapi  # type: ignore[method-assign]
 
     return app
 

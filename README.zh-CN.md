@@ -12,17 +12,18 @@ MeetingMind 是一个本地优先的中文会议音频整理项目。
 - 前端已切换至真实 FastAPI HTTP API（开发环境通过 Vite 代理）
 - 已接入 WhisperX + pyannote 自动说话人分离，并保留人工说话人姓名映射
 - 第六阶段异步队列和故障恢复已完成；第七阶段发布级检查、真实运行态验收与故障恢复验收已完成，当前为本地单机发布候选
+- 第八阶段已开始：部署级 Bearer 访问令牌、前端会话令牌输入、OpenAPI 安全契约和发布门禁已完成；下一项为 HTTPS/反向代理
 - Outlook Classic 已完成 ICS 实际导入验收，中文内容和 Asia/Shanghai 时间转换正确
 
 
 
-第七阶段说明见 `D:\MeetingMind\docs\第七阶段开发说明.md`；接口文档见 `D:\MeetingMind\docs\OpenAPI使用说明.md`；演示脚本见 `D:\MeetingMind\docs\演示材料.md`；可重复执行的发布前检查见 `D:\MeetingMind\docs\发布前检查清单.md`。 本次本地检查记录见 `D:\MeetingMind\docs\发布前检查记录-2026-09-17.md`。
+第七阶段说明见 `D:\MeetingMind\docs\第七阶段开发说明.md`；第八阶段说明见 `D:\MeetingMind\docs\第八阶段开发说明.md`；接口文档见 `D:\MeetingMind\docs\OpenAPI使用说明.md`；演示脚本见 `D:\MeetingMind\docs\演示材料.md`；可重复执行的发布前检查见 `D:\MeetingMind\docs\发布前检查清单.md`。 本次本地检查记录见 `D:\MeetingMind\docs\发布前检查记录-2026-09-17.md`。
 
 完整设计基线见 `D:\MeetingMind\MeetingMind开发设计文档.md`，后端说明见 `D:\MeetingMind\backend\README.md`。
 
 统一运行数据目录的迁移与复验记录见 `D:\MeetingMind\docs\运行数据目录迁移记录-2026-09-17.md`。
 
-隐私、外部模型传输与无自动脱敏边界见 `D:\MeetingMind\docs\隐私与数据边界.md`。 验证记录见 `D:\MeetingMind\docs\隐私数据边界验证记录-2026-09-17.md`。
+隐私、外部模型传输与无自动脱敏边界见 `D:\MeetingMind\docs\隐私与数据边界.md`。 访问控制与部署边界见 `D:\MeetingMind\docs\访问控制与部署边界.md`。 验证记录见 `D:\MeetingMind\docs\隐私数据边界验证记录-2026-09-17.md`。
 
 ## 前端快速启动
 
@@ -47,8 +48,8 @@ backend\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --rel
 
 截至 2026 年 9 月 17 日：
 
-- 后端自动化测试：`53 passed`（以 2026 年 9 月 17 日隐私边界发布检查为准）；
-- 前端 Vitest 单元测试：`16 passed`；
+- 后端自动化测试：`57 passed`（以 2026 年 9 月 17 日访问控制检查为准）；
+- 前端 Vitest 单元测试：`18 passed`；
 - 前端类型检查和生产构建：通过；
 - 三组受控 Gold Standard：结构化输出成功率、待办 Precision/Recall、负责人、日期和状态指标均为 `1.0`；
 - 中断音频任务可在服务重启后从原始音频自动恢复；

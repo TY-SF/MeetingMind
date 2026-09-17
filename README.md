@@ -13,17 +13,18 @@ MeetingMind 是一个本地优先的中文会议音频整理项目。
 - 已接入 WhisperX + pyannote 自动说话人分离，失败时保留转录并明确标记降级
 - 第六阶段：Redis + RQ、Docker Compose、媒体预检、WhisperX 对齐、任务重试、队列故障恢复、结构化日志与删除补偿，已完成
 - 第七阶段：发布级自动检查、Docker Compose 校验、Redis/RQ Worker 门禁、真实链路验收、故障恢复验收和无敏感值 JSON 检查报告已完成；当前为本地单机发布候选
+- 第八阶段已开始：部署级 Bearer 访问令牌、前端会话令牌输入、OpenAPI 安全契约和发布门禁已完成；下一项为 HTTPS/反向代理
 - Outlook Classic 已完成 ICS 实际导入验收，中文内容和 Asia/Shanghai 时间转换正确
 
 
 
-第七阶段说明见 `D:\MeetingMind\docs\第七阶段开发说明.md`；接口文档见 `D:\MeetingMind\docs\OpenAPI使用说明.md`；演示脚本见 `D:\MeetingMind\docs\演示材料.md`；可重复执行的发布前检查见 `D:\MeetingMind\docs\发布前检查清单.md`。 本次本地检查记录见 `D:\MeetingMind\docs\发布前检查记录-2026-09-17.md`。
+第七阶段说明见 `D:\MeetingMind\docs\第七阶段开发说明.md`；第八阶段说明见 `D:\MeetingMind\docs\第八阶段开发说明.md`；接口文档见 `D:\MeetingMind\docs\OpenAPI使用说明.md`；演示脚本见 `D:\MeetingMind\docs\演示材料.md`；可重复执行的发布前检查见 `D:\MeetingMind\docs\发布前检查清单.md`。 本次本地检查记录见 `D:\MeetingMind\docs\发布前检查记录-2026-09-17.md`。
 
 完整设计基线见 `D:\MeetingMind\MeetingMind开发设计文档.md`，后端说明见 `D:\MeetingMind\backend\README.md`。
 
 统一运行数据目录的迁移与复验记录见 `D:\MeetingMind\docs\运行数据目录迁移记录-2026-09-17.md`。
 
-隐私、外部模型传输与无自动脱敏边界见 `D:\MeetingMind\docs\隐私与数据边界.md`。 验证记录见 `D:\MeetingMind\docs\隐私数据边界验证记录-2026-09-17.md`。
+隐私、外部模型传输与无自动脱敏边界见 `D:\MeetingMind\docs\隐私与数据边界.md`。 访问控制与部署边界见 `D:\MeetingMind\docs\访问控制与部署边界.md`。 验证记录见 `D:\MeetingMind\docs\隐私数据边界验证记录-2026-09-17.md`。
 
 ## 第六阶段基础设施启动
 
@@ -35,7 +36,7 @@ docker compose --env-file .env.compose up -d mysql redis
 .\scripts\start_rq_worker.ps1
 ```
 
-后端的 `backend\.env\meetingmind.env` 需要配置 `REDIS_URL=redis://127.0.0.1:6379/0` 和 `MEETINGMIND_QUEUE_BACKEND=rq`。API 与 RQ Worker 必须同时运行；Redis 不可用时上传会返回 `503 QUEUE_UNAVAILABLE`，不会伪装成已进入队列。Windows 下 `start_rq_worker.ps1` 会使用兼容的 `SimpleWorker`；需要后台常驻时执行 `scripts\start_rq_worker_background.ps1`。可通过 `GET /api/v1/health/queue` 检查 Redis 与 Worker。
+后端的 `backend\.env\meetingmind.env` 需要配置 `REDIS_URL=redis://127.0.0.1:6379/0` 和 `MEETINGMIND_QUEUE_BACKEND=rq`。API 与 RQ Worker 必须同时运行；Redis 不可用时上传会返回 `503 QUEUE_UNAVAILABLE`，不会伪装成已进入队列。Windows 下 `start_rq_worker.ps1` 会使用兼容的 `SimpleWorker`；需要后台常驻时执行 `scripts\start_rq_worker_background.ps1`。可通过带 Bearer 令牌的 `GET /api/v1/health/queue` 检查 Redis 与 Worker。真实发布配置还必须设置至少 32 个字符的 `MEETINGMIND_API_TOKEN`。
 
 ## 前端快速启动
 
@@ -60,8 +61,8 @@ backend\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --rel
 
 截至 2026 年 9 月 17 日：
 
-- 后端自动化测试：`53 passed`（以 2026 年 9 月 17 日隐私边界发布检查为准）；
-- 前端 Vitest 单元测试：`16 passed`；
+- 后端自动化测试：`57 passed`（以 2026 年 9 月 17 日访问控制检查为准）；
+- 前端 Vitest 单元测试：`18 passed`；
 - 前端类型检查和生产构建：通过；
 - 三组受控 Gold Standard：结构化输出成功率、待办 Precision/Recall、负责人、日期和状态指标均为 `1.0`；
 - 中断音频任务可在服务重启后从原始音频自动恢复；

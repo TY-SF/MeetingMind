@@ -268,6 +268,12 @@ class HealthResponse(BaseModel):
     phase: str
 
 
+class AuthStatusResponse(BaseModel):
+    required: bool
+    authenticated: bool
+    storage: str = "session"
+
+
 class QueueHealthResponse(BaseModel):
     status: str
     service: str

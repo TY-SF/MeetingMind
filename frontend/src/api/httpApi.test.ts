@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { clearAccessToken, setAccessToken } from './accessToken'
 import { httpApi } from './httpApi'
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => {
+  clearAccessToken()
+  vi.unstubAllGlobals()
+})
 
 describe('httpApi processing job mapping', () => {
   it('maps persisted stage event fields without losing timing data', async () => {
@@ -99,5 +103,35 @@ describe('httpApi privacy acknowledgements', () => {
       headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ analysis_data_confirmed: true }),
     }))
+  })
+})
+
+describe('httpApi deployment access token', () => {
+  it('attaches the session-scoped bearer token to API requests', async () => {
+    setAccessToken('frontend-access-token-1234567890123456')
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => [] })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await httpApi.listMeetings()
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/meetings', expect.objectContaining({
+      headers: expect.objectContaining({ Authorization: 'Bearer frontend-access-token-1234567890123456' }),
+    }))
+  })
+
+  it('clears an invalid token and notifies the app to request a replacement', async () => {
+    setAccessToken('frontend-access-token-1234567890123456')
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: async () => ({ detail: { code: 'ACCESS_TOKEN_INVALID', message: '访问令牌无效' } }),
+    }))
+    const listener = vi.fn()
+    window.addEventListener('meetingmind-access-token-required', listener, { once: true })
+
+    await expect(httpApi.listMeetings()).rejects.toThrow('访问令牌无效')
+
+    expect(sessionStorage.getItem('meetingmind.apiAccessToken')).toBeNull()
+    expect(listener).toHaveBeenCalledOnce()
   })
 })
