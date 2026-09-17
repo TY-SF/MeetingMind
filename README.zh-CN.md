@@ -2,7 +2,7 @@
 
 MeetingMind 是一个本地优先的中文会议音频整理项目。
 
-截至 2026 年 9 月 14 日：
+截至 2026 年 9 月 17 日：
 
 - 第一阶段：FastAPI 最小闭环，已完成
 - 第二阶段：FFmpeg + WhisperX 中文转录，已完成
@@ -15,7 +15,7 @@ MeetingMind 是一个本地优先的中文会议音频整理项目。
 
 
 
-第七阶段说明见 `D:\MeetingMind\docs\第七阶段开发说明.md`；接口文档见 `D:\MeetingMind\docs\OpenAPI使用说明.md`；演示脚本见 `D:\MeetingMind\docs\演示材料.md`；可重复执行的发布前检查见 `D:\MeetingMind\docs\发布前检查清单.md`。 本次本地检查记录见 `D:\MeetingMind\docs\发布前检查记录-2026-09-14.md`。
+第七阶段说明见 `D:\MeetingMind\docs\第七阶段开发说明.md`；接口文档见 `D:\MeetingMind\docs\OpenAPI使用说明.md`；演示脚本见 `D:\MeetingMind\docs\演示材料.md`；可重复执行的发布前检查见 `D:\MeetingMind\docs\发布前检查清单.md`。 本次本地检查记录见 `D:\MeetingMind\docs\发布前检查记录-2026-09-17.md`。
 
 完整设计基线见 `D:\MeetingMind\MeetingMind开发设计文档.md`，后端说明见 `D:\MeetingMind\backend\README.md`。
 
@@ -40,9 +40,9 @@ backend\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --rel
 
 ## 第五阶段验证摘要
 
-截至 2026 年 9 月 10 日：
+截至 2026 年 9 月 17 日：
 
-- 后端自动化测试：`49 passed`（以当前发布检查为准）；
+- 后端自动化测试：`50 passed`（以 2026 年 9 月 17 日发布检查为准）；
 - 前端 Vitest 单元测试：`14 passed`；
 - 前端类型检查和生产构建：通过；
 - 三组受控 Gold Standard：结构化输出成功率、待办 Precision/Recall、负责人、日期和状态指标均为 `1.0`；
