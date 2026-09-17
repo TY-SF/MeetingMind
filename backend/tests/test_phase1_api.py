@@ -65,9 +65,9 @@ def test_create_meeting_runs_transcription_boundary(tmp_path: Path, monkeypatch)
         assert meeting["job"]["diarization_status"] == "DEGRADED"
         assert meeting["job"]["speaker_count"] == 1
         assert "说话人分离未完成" in meeting["job"]["warning"]
-    assert len(list((tmp_path / "meetings").glob("*/source/original.wav"))) == 1
-    assert len(list((tmp_path / "meetings").glob("*/working/normalized.wav"))) == 1
-    assert len(list((tmp_path / "meetings").glob("*/results/transcript.json"))) == 1
+    assert len(list((tmp_path / "runtime" / "meetings").glob("*/source/original.wav"))) == 1
+    assert len(list((tmp_path / "runtime" / "meetings").glob("*/working/normalized.wav"))) == 1
+    assert len(list((tmp_path / "runtime" / "meetings").glob("*/results/transcript.json"))) == 1
 
 
 def test_rejects_unsupported_extension(tmp_path: Path) -> None:

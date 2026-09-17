@@ -642,6 +642,8 @@ GET /api/v1/health/ready
 
 ## 20. 文件存储和生命周期
 
+所有可变运行数据必须位于项目根目录 `data/` 下；会议文件使用 `data/meetings/{meeting_id}`，不得再写入项目根目录 `meetings/` 或 `backend/meetings/`。
+
 ```text
 data/meetings/{meeting_id}/
 ├── source/original.*

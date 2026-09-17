@@ -19,7 +19,7 @@
 - 真实中文 MP3 的 WhisperX 转录 → OpenAI 结构化分析 → MySQL 持久化
 - 真实人工审核 PATCH、过期版本 `409` 与测试记录删除验证
 
-当前自动化测试结果：`50 passed`（2026 年 9 月 17 日）。
+当前自动化测试结果：`51 passed`（2026 年 9 月 17 日）。
 
 ## 数据库
 
@@ -38,6 +38,15 @@ processing_stage_events
 AI 原始响应保存在 `meeting_analyses.ai_raw_result`，人工审核后的当前结果保存在摘要、结论和待办关系表中。人工修改不会覆盖原始 AI 响应快照。
 
 ## 本地配置
+
+当前统一运行数据根目录为 `D:\MeetingMind\data`：日志、发布检查报告和会议文件分别位于 `data/logs`、`data/release-check` 和 `data/meetings`。从旧版本升级且仍存在项目根目录 `meetings` 时，先执行：
+
+```powershell
+backend\.venv\Scripts\python.exe scripts\migrate_runtime_layout.py
+backend\.venv\Scripts\python.exe scripts\migrate_runtime_layout.py --apply
+```
+
+第一条命令只显示迁移计划；第二条命令在确认无目标冲突后移动目录。`backend/data` 与 `backend/meetings` 属于早期开发测试资产，不是当前运行目录。
 
 实际配置文件不进入版本库：
 

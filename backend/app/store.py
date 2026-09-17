@@ -13,10 +13,13 @@ class JsonStore:
 
     def __init__(self, data_dir: Path | None = None) -> None:
         self.data_dir = data_dir or Path(
-            os.getenv("MEETINGMIND_DATA_DIR", Path(__file__).parents[1] / "data" / "runtime")
+            os.getenv("MEETINGMIND_DATA_DIR", Path(__file__).parents[2] / "data")
         )
         self.data_dir.mkdir(parents=True, exist_ok=True)
-        self.meetings_dir = self.data_dir.parent / "meetings"
+        # Keep every mutable runtime artifact below the configured data root.
+        # Older releases used a sibling `<project>/meetings` directory; migrate it
+        # explicitly with scripts/migrate_runtime_layout.py before upgrading.
+        self.meetings_dir = self.data_dir / "meetings"
         self.meetings_dir.mkdir(parents=True, exist_ok=True)
         self.path = self.data_dir / "meetings.json"
         self._lock = threading.RLock()

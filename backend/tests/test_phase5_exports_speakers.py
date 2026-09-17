@@ -154,7 +154,7 @@ def test_export_endpoints_return_downloads_without_persisting_derived_files(tmp_
         assert calendar.content.startswith(BOM_UTF8)
         assert calendar.content[len(BOM_UTF8):].decode("utf-8").count("BEGIN:VEVENT") == 1
 
-    export_dir = tmp_path.parent / "meetings" / "meeting-phase5" / "exports"
+    export_dir = tmp_path / "meetings" / "meeting-phase5" / "exports"
     assert not export_dir.exists()
 
 

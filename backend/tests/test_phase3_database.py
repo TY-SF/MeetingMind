@@ -189,6 +189,21 @@ def test_process_environment_can_select_infra_file_and_override_its_redis_url(tm
     assert settings.redis_url == "redis://process-host:6390/1"
 
 
+def test_default_data_dir_uses_project_root(tmp_path, monkeypatch) -> None:
+    from app.config import Settings
+
+    project_root = tmp_path / "project"
+    backend_root = project_root / "backend"
+    backend_root.mkdir(parents=True)
+    monkeypatch.setenv("MEETINGMIND_ENV_FILE", str(project_root / "missing.env"))
+    monkeypatch.delenv("MEETINGMIND_DATA_DIR", raising=False)
+    monkeypatch.delenv("DATA_DIR", raising=False)
+
+    settings = Settings.from_env(base_dir=backend_root)
+
+    assert settings.data_dir.resolve() == (project_root / "data").resolve()
+
+
 def test_relative_data_dir_is_stable_across_working_directories(tmp_path, monkeypatch) -> None:
     from app.config import Settings
 

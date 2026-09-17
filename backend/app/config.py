@@ -114,7 +114,7 @@ class Settings:
             configured_data_dir = Path(data_dir_value)
             data_dir = configured_data_dir if configured_data_dir.is_absolute() else root.parent / configured_data_dir
         else:
-            data_dir = root / "data"
+            data_dir = root.parent / "data"
         return cls(
             database_url=resolve_database_url(file_values, data_dir),
             data_dir=data_dir,
