@@ -2,7 +2,7 @@
 
 MeetingMind 是一个本地优先的中文会议音频整理项目。
 
-截至 2026 年 9 月 10 日：
+截至 2026 年 9 月 14 日：
 
 - 第一阶段：FastAPI 最小闭环，已完成
 - 第二阶段：FFmpeg + WhisperX 中文转录，已完成
@@ -11,11 +11,11 @@ MeetingMind 是一个本地优先的中文会议音频整理项目。
 - 第五阶段：说话人映射、Outlook 兼容 ICS、Markdown 导出、启动恢复、Gold Standard 评估、AI 草稿审计、阶段耗时记录和 GitHub Actions 已完成
 - 前端已切换至真实 FastAPI HTTP API（开发环境通过 Vite 代理）
 - 已接入 WhisperX + pyannote 自动说话人分离，并保留人工说话人姓名映射
-- 第六阶段异步队列和故障恢复已完成；第七阶段发布级检查与运行态验收已开始
+- 第六阶段异步队列和故障恢复已完成；第七阶段发布级检查、真实运行态验收与故障恢复验收已完成，当前为本地单机发布候选
 
 
 
-第七阶段说明见 `D:\MeetingMind\docs\第七阶段开发说明.md`；接口文档见 `D:\MeetingMind\docs\OpenAPI使用说明.md`；演示脚本见 `D:\MeetingMind\docs\演示材料.md`；可重复执行的发布前检查见 `D:\MeetingMind\docs\发布前检查清单.md`。 本次本地检查记录见 `D:\MeetingMind\docs\发布前检查记录-2026-09-10.md`。
+第七阶段说明见 `D:\MeetingMind\docs\第七阶段开发说明.md`；接口文档见 `D:\MeetingMind\docs\OpenAPI使用说明.md`；演示脚本见 `D:\MeetingMind\docs\演示材料.md`；可重复执行的发布前检查见 `D:\MeetingMind\docs\发布前检查清单.md`。 本次本地检查记录见 `D:\MeetingMind\docs\发布前检查记录-2026-09-14.md`。
 
 完整设计基线见 `D:\MeetingMind\MeetingMind开发设计文档.md`，后端说明见 `D:\MeetingMind\backend\README.md`。
 
@@ -42,8 +42,8 @@ backend\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --rel
 
 截至 2026 年 9 月 10 日：
 
-- 后端自动化测试：`37 passed`；
-- 前端 Vitest 单元测试：`13 passed`；
+- 后端自动化测试：`49 passed`（以当前发布检查为准）；
+- 前端 Vitest 单元测试：`14 passed`；
 - 前端类型检查和生产构建：通过；
 - 三组受控 Gold Standard：结构化输出成功率、待办 Precision/Recall、负责人、日期和状态指标均为 `1.0`；
 - 中断音频任务可在服务重启后从原始音频自动恢复；

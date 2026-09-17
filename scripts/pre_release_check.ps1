@@ -14,6 +14,16 @@ $envFile = Join-Path $root 'backend\.env\meetingmind.env'
 $failures = [System.Collections.Generic.List[string]]::new()
 $warnings = [System.Collections.Generic.List[string]]::new()
 $checks = [System.Collections.Generic.List[object]]::new()
+$testEnvironmentNames = @(
+    'MEETINGMIND_ENV_FILE',
+    'MEETINGMIND_INFRA_ENV_FILE',
+    'MEETINGMIND_DATABASE_URL',
+    'MYSQL_HOST',
+    'MYSQL_PORT',
+    'MYSQL_DATABASE',
+    'MYSQL_USER',
+    'MYSQL_PASSWORD'
+)
 
 function Write-Pass([string]$message) { Write-Host "[PASS] $message" -ForegroundColor Green; $script:checks.Add([pscustomobject]@{ name = $message; status = 'pass' }) }
 function Write-Warn([string]$message) { Write-Host "[WARN] $message" -ForegroundColor Yellow; $script:warnings.Add($message); $script:checks.Add([pscustomobject]@{ name = $message; status = 'warning' }) }
@@ -26,6 +36,33 @@ function Invoke-External([string]$name, [scriptblock]$action) {
     } catch {
         Write-Fail "$name：$($_.Exception.Message)"
     }
+}
+function Invoke-IsolatedBackendCheck([string]$name, [scriptblock]$action) {
+    $saved = @{}
+    foreach ($nameToClear in $testEnvironmentNames) {
+        $saved[$nameToClear] = [Environment]::GetEnvironmentVariable($nameToClear, 'Process')
+        [Environment]::SetEnvironmentVariable($nameToClear, $null, 'Process')
+    }
+    try {
+        Invoke-External $name $action
+    } finally {
+        foreach ($nameToRestore in $testEnvironmentNames) {
+            [Environment]::SetEnvironmentVariable($nameToRestore, $saved[$nameToRestore], 'Process')
+        }
+    }
+}
+function Invoke-NpmAudit {
+    $output = @(& npm audit --omit=dev --audit-level=high 2>&1)
+    if ($LASTEXITCODE -eq 0) {
+        Write-Pass '前端生产依赖安全审计（高危阈值）'
+        return
+    }
+    $text = ($output | Out-String).Trim()
+    if ($text -match '(?i)audit endpoint|ECONNRESET|ETIMEDOUT|ENETUNREACH|EAI_AGAIN|network|returned an error') {
+        Write-Warn '前端生产依赖安全审计未完成：npm registry 当前不可达；未将网络故障误判为依赖漏洞'
+        return
+    }
+    throw "npm audit 发现问题或执行失败（退出码 $LASTEXITCODE）"
 }
 
 Write-Host "MeetingMind 发布前完整检查（$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')）" -ForegroundColor Cyan
@@ -151,12 +188,12 @@ if (-not $SkipLiveServer) {
 }
 
 Invoke-External 'Python 依赖一致性检查' { & $python -m pip check }
-Invoke-External '后端 pytest' { & $python -m pytest -q }
-Invoke-External '受控 Gold Standard 评估' { & $python (Join-Path $root 'evaluation\evaluate.py') --output (Join-Path $env:TEMP 'meetingmind-evaluation.json') --minimum 0.8 }
+Invoke-IsolatedBackendCheck '后端 pytest' { & $python -m pytest -q }
+Invoke-IsolatedBackendCheck '受控 Gold Standard 评估' { & $python (Join-Path $root 'evaluation\evaluate.py') --output (Join-Path $env:TEMP 'meetingmind-evaluation.json') --minimum 0.8 }
 
 if (-not $SkipFrontend) {
     $frontend = Join-Path $root 'frontend'
-    Invoke-External '前端生产依赖安全审计（高危阈值）' { Push-Location $frontend; try { npm audit --omit=dev --audit-level=high } finally { Pop-Location } }
+    try { Push-Location $frontend; try { Invoke-NpmAudit } finally { Pop-Location } } catch { Write-Fail "前端生产依赖安全审计：$($_.Exception.Message)" }
     Invoke-External '前端 Vitest' { Push-Location $frontend; try { npm run test } finally { Pop-Location } }
     Invoke-External '前端类型检查与生产构建' { Push-Location $frontend; try { npm run build } finally { Pop-Location } }
 } else {

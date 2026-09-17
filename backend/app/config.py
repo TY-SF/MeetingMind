@@ -91,6 +91,24 @@ class Settings:
         root = base_dir or Path(__file__).parents[1]
         env_file = Path(os.getenv("MEETINGMIND_ENV_FILE", root / ".env" / "meetingmind.env"))
         file_values = load_env_file(env_file)
+        # Allow local Docker credentials to live in the ignored compose file.
+        infra_file_value = env_value("MEETINGMIND_INFRA_ENV_FILE", file_values)
+        if infra_file_value:
+            infra_file = Path(infra_file_value)
+            if not infra_file.is_absolute():
+                infra_file = root.parent / infra_file
+            infra_values = load_env_file(infra_file)
+            mysql_values = {key: value for key, value in infra_values.items() if key.startswith("MYSQL_")}
+            if mysql_values:
+                file_values.update(mysql_values)
+                # Selecting an infrastructure file must replace a legacy URL from
+                # the backend env file. A process-level URL still wins via env_value.
+                file_values["MEETINGMIND_DATABASE_URL"] = ""
+            redis_port = infra_values.get("REDIS_PORT")
+            if redis_port:
+                # Docker Compose publishes Redis on the local host. Preserve an
+                # explicit process REDIS_URL, but replace a stale backend-file URL.
+                file_values["REDIS_URL"] = f"redis://127.0.0.1:{redis_port}/0"
         data_dir_value = env_value("MEETINGMIND_DATA_DIR", file_values) or env_value("DATA_DIR", file_values)
         if data_dir_value:
             configured_data_dir = Path(data_dir_value)
