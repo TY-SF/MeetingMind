@@ -12,7 +12,7 @@ MeetingMind 是一个本地优先的中文会议音频整理项目。
 - 前端已切换至真实 FastAPI HTTP API（开发环境通过 Vite 代理）
 - 已接入 WhisperX + pyannote 自动说话人分离，并保留人工说话人姓名映射
 - 第六阶段异步队列和故障恢复已完成；第七阶段发布级检查、真实运行态验收与故障恢复验收已完成，当前为本地单机发布候选
-- 第八阶段已开始：部署级 Bearer 访问令牌、前端会话令牌输入、OpenAPI 安全契约和发布门禁已完成；下一项为 HTTPS/反向代理
+- 第八阶段进行中：部署级 Bearer 访问令牌和本机 HTTPS/Caddy 反向代理边界已完成；下一项为备份与恢复
 - Outlook Classic 已完成 ICS 实际导入验收，中文内容和 Asia/Shanghai 时间转换正确
 
 
@@ -23,7 +23,7 @@ MeetingMind 是一个本地优先的中文会议音频整理项目。
 
 统一运行数据目录的迁移与复验记录见 `D:\MeetingMind\docs\运行数据目录迁移记录-2026-09-17.md`。
 
-隐私、外部模型传输与无自动脱敏边界见 `D:\MeetingMind\docs\隐私与数据边界.md`。 访问控制与部署边界见 `D:\MeetingMind\docs\访问控制与部署边界.md`。 验证记录见 `D:\MeetingMind\docs\访问控制验证记录-2026-09-17.md`。 验证记录见 `D:\MeetingMind\docs\隐私数据边界验证记录-2026-09-17.md`。
+隐私、外部模型传输与无自动脱敏边界见 `D:\MeetingMind\docs\隐私与数据边界.md`。 访问控制与部署边界见 `D:\MeetingMind\docs\访问控制与部署边界.md`。 HTTPS 与反向代理见 `D:\MeetingMind\docs\HTTPS与反向代理.md`。 验证记录见 `D:\MeetingMind\docs\访问控制验证记录-2026-09-17.md`。 验证记录见 `D:\MeetingMind\docs\隐私数据边界验证记录-2026-09-17.md`。
 
 ## 前端快速启动
 
@@ -48,7 +48,7 @@ backend\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --rel
 
 截至 2026 年 9 月 17 日：
 
-- 后端自动化测试：`57 passed`（以 2026 年 9 月 17 日访问控制检查为准）；
+- 后端自动化测试：`57 passed`（以 2026 年 9 月 17 日本机 HTTPS 边界检查为准）；
 - 前端 Vitest 单元测试：`18 passed`；
 - 前端类型检查和生产构建：通过；
 - 三组受控 Gold Standard：结构化输出成功率、待办 Precision/Recall、负责人、日期和状态指标均为 `1.0`；

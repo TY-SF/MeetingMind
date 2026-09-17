@@ -87,6 +87,7 @@ if (-not $SkipInfrastructure) {
             if ($LASTEXITCODE -ne 0) { throw 'Docker Compose 插件不可用，且未找到 docker-compose 独立命令' }
             Invoke-External 'Docker Compose 配置校验' { & $docker.Source compose --env-file $composeEnvFile -f $composeFile config --quiet }
         }
+        Invoke-External 'HTTPS/Caddy 边界配置校验' { & (Join-Path $root 'scripts\validate_secure_edge.ps1') }
     } catch {
         Write-Fail "Docker Compose 检查：$($_.Exception.Message)"
     }
@@ -122,6 +123,13 @@ try {
         throw 'MEETINGMIND_API_TOKEN 未配置或少于 32 个字符'
     }
     $apiHeaders = @{ Authorization = "Bearer $($values['MEETINGMIND_API_TOKEN'])" }
+    $edgeHttpsPort = 8443
+    $composeEnvPath = Join-Path $root '.env.compose'
+    if (Test-Path $composeEnvPath) {
+        foreach ($line in Get-Content $composeEnvPath -Encoding utf8) {
+            if ($line.Trim() -match '^EDGE_HTTPS_PORT=(\d+)$') { $edgeHttpsPort = [int]$Matches[1] }
+        }
+    }
     Write-Pass '本地配置字段和部署级访问令牌存在（未输出敏感值）'
 } catch {
     Write-Fail "本地配置检查：$($_.Exception.Message)"
@@ -166,6 +174,20 @@ if (-not $SkipLiveServer) {
         Write-Pass "Redis/RQ Worker 健康检查（Worker=$($queue.worker_count)，队列=$($queue.queue_length)）"
     } catch {
         Write-Fail "Redis/RQ Worker 健康检查：$($_.Exception.Message)"
+    }
+
+    try {
+        $edgeHeadersPath = Join-Path $env:TEMP 'meetingmind-edge-headers.txt'
+        & curl.exe -kfsS -D $edgeHeadersPath -o NUL "https://localhost:$edgeHttpsPort/api/v1/health"
+        if ($LASTEXITCODE -ne 0) { throw "HTTPS 健康检查失败（退出码 $LASTEXITCODE）" }
+        $edgeHeaders = Get-Content $edgeHeadersPath -Raw -Encoding utf8
+        if ($edgeHeaders -notmatch '(?im)^X-Content-Type-Options:\s*nosniff') { throw 'HTTPS 响应缺少 nosniff' }
+        if ($edgeHeaders -notmatch '(?im)^Content-Security-Policy:') { throw 'HTTPS 响应缺少 CSP' }
+        & curl.exe -kfsS -o NUL -H "Authorization: $($apiHeaders.Authorization)" "https://localhost:$edgeHttpsPort/api/v1/meetings"
+        if ($LASTEXITCODE -ne 0) { throw "HTTPS 受保护接口检查失败（退出码 $LASTEXITCODE）" }
+        Write-Pass "本地 HTTPS 反向代理与安全响应头（端口 $edgeHttpsPort）"
+    } catch {
+        Write-Fail "HTTPS 反向代理检查：$($_.Exception.Message)"
     }
 
     try {

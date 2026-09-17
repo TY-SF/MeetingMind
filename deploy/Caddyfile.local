@@ -1,0 +1,38 @@
+https://localhost:{$EDGE_HTTPS_PORT:8443} {
+	tls internal
+	encode zstd gzip
+
+	log {
+		output stdout
+		format json
+	}
+
+	header {
+		-Server
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+	}
+
+	request_body {
+		max_size 210MB
+	}
+
+	@backend path /api/* /docs* /redoc* /openapi.json
+	handle @backend {
+		reverse_proxy host.docker.internal:8000 {
+			transport http {
+				dial_timeout 5s
+				response_header_timeout 2h
+			}
+		}
+	}
+
+	handle {
+		root * /srv/frontend
+		try_files {path} /index.html
+		file_server
+	}
+}

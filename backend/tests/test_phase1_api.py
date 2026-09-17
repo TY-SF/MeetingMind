@@ -93,7 +93,7 @@ def test_rejects_unsupported_extension(tmp_path: Path) -> None:
 def test_health_endpoints(tmp_path: Path) -> None:
     app = create_app(tmp_path / "runtime")
     with TestClient(app) as client:
-        assert client.get("/api/v1/health").json()["phase"] == "phase-7"
+        assert client.get("/api/v1/health").json()["phase"] == "phase-8"
         assert client.get("/api/v1/health/ready").json()["status"] == "ready"
 
 

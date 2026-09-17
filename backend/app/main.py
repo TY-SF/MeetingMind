@@ -19,7 +19,7 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import Response
 
 from .audio_processor import AudioProcessingError, transcribe_audio, validate_audio_file
-from .auth import AccessTokenMiddleware, PUBLIC_API_PATHS, token_matches
+from .auth import AccessTokenMiddleware, PUBLIC_API_PATHS, SecurityHeadersMiddleware, token_matches
 from .config import Settings
 from .db import MeetingDeletionError, OptimisticLockError, SqlAlchemyStore
 from .schemas import AnalysisAudit, AuthStatusResponse, CreateMeetingResponse, HealthResponse, Meeting, MeetingAnalysis, ProcessingJob, QueueHealthResponse, UpdateAnalysisInput, UpdateSpeakersInput
@@ -368,6 +368,7 @@ def create_app(data_dir: Path | None = None, database_url: str | None = None) ->
     allowed_origins = [origin.strip() for origin in settings.frontend_origin.split(",") if origin.strip()]
     configure_logging(settings.log_level)
     app.add_middleware(AccessTokenMiddleware, access_token=settings.api_access_token)
+    app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RequestIdMiddleware)
     app.add_middleware(
         CORSMiddleware,
@@ -382,7 +383,7 @@ def create_app(data_dir: Path | None = None, database_url: str | None = None) ->
 
     @app.get("/api/v1/health", response_model=HealthResponse, tags=["健康检查"], summary="检查 API 存活")
     async def health() -> HealthResponse:
-        return HealthResponse(status="ok", service="meetingmind-backend", phase="phase-7")
+        return HealthResponse(status="ok", service="meetingmind-backend", phase="phase-8")
 
     @app.get(
         "/api/v1/auth/status",
@@ -401,13 +402,13 @@ def create_app(data_dir: Path | None = None, database_url: str | None = None) ->
     async def readiness() -> HealthResponse:
         if not store.check_ready():
             raise HTTPException(status_code=503, detail="数据库尚未就绪")
-        return HealthResponse(status="ready", service="meetingmind-backend", phase="phase-7")
+        return HealthResponse(status="ready", service="meetingmind-backend", phase="phase-8")
 
     @app.get("/api/v1/health/queue", response_model=QueueHealthResponse, tags=["健康检查"], summary="检查 Redis 与 RQ Worker 状态", responses={503: {"description": "Redis 不可用"}})
     async def queue_health() -> QueueHealthResponse:
         if settings.queue_backend != "rq":
             return QueueHealthResponse(
-                status="disabled", service="meetingmind-backend", phase="phase-7", redis="disabled",
+                status="disabled", service="meetingmind-backend", phase="phase-8", redis="disabled",
                 worker_online=False, worker_count=0, queue_length=0, intermediate_job_count=0,
                 started_job_count=0, reconciled_jobs=0,
             )
@@ -418,7 +419,7 @@ def create_app(data_dir: Path | None = None, database_url: str | None = None) ->
             raise HTTPException(status_code=503, detail={"code": "REDIS_UNAVAILABLE", "message": "Redis 不可用"}) from exc
         status_value = "ready" if snapshot.worker_online else "degraded"
         return QueueHealthResponse(
-            status=status_value, service="meetingmind-backend", phase="phase-7", redis=snapshot.redis,
+            status=status_value, service="meetingmind-backend", phase="phase-8", redis=snapshot.redis,
             worker_online=snapshot.worker_online, worker_count=snapshot.worker_count,
             queue_length=snapshot.queue_length, intermediate_job_count=snapshot.intermediate_job_count,
             started_job_count=snapshot.started_job_count, reconciled_jobs=reconciled,

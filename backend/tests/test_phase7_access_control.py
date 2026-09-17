@@ -38,6 +38,9 @@ def test_access_token_protects_business_api_but_not_health(tmp_path: Path, monke
         assert missing.json()["detail"]["code"] == "ACCESS_TOKEN_REQUIRED"
         assert missing.headers["www-authenticate"] == "Bearer"
         assert missing.headers["x-request-id"] == "auth-missing"
+        assert missing.headers["cache-control"] == "no-store"
+        assert missing.headers["x-content-type-options"] == "nosniff"
+        assert missing.headers["x-frame-options"] == "DENY"
 
         invalid = client.get("/api/v1/meetings", headers={"Authorization": "Bearer wrong-token"})
         assert invalid.status_code == 401

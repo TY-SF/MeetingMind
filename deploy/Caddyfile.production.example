@@ -1,0 +1,45 @@
+# Replace meetingmind.example.com with the real DNS name.
+meetingmind.example.com {
+	encode zstd gzip
+
+	log {
+		output file /var/log/caddy/meetingmind-access.json {
+			roll_size 10MiB
+			roll_keep 10
+			roll_keep_for 720h
+		}
+		format json
+	}
+
+	header {
+		-Server
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+	}
+
+	request_body {
+		max_size 210MB
+	}
+
+	@backend path /api/* /docs* /redoc* /openapi.json
+	handle @backend {
+		# Run Caddy on the same host/network as the loopback-only API, or replace
+		# this address with a private container-network service name.
+		reverse_proxy 127.0.0.1:8000 {
+			transport http {
+				dial_timeout 5s
+				response_header_timeout 2h
+			}
+		}
+	}
+
+	handle {
+		root * /srv/meetingmind/frontend
+		try_files {path} /index.html
+		file_server
+	}
+}

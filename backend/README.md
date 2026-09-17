@@ -4,7 +4,7 @@
 
 ## 当前阶段：第八阶段部署边界加固
 
-截至 2026 年 9 月 17 日，第一至第七阶段已完成；第八阶段的部署级访问控制已完成，下一项为 HTTPS/反向代理。已验证：
+截至 2026 年 9 月 17 日，第一至第七阶段已完成；第八阶段的部署级访问控制和本机 HTTPS/Caddy 反向代理边界已完成，下一项为备份与恢复。已验证：
 
 - OpenAI Responses API Provider 抽象
 - Pydantic 严格结构化输出 Schema
@@ -21,7 +21,7 @@
 - 真实中文 MP3 的 WhisperX 转录 → OpenAI 结构化分析 → MySQL 持久化
 - 真实人工审核 PATCH、过期版本 `409` 与测试记录删除验证
 
-当前自动化测试结果：`57 passed`（2026 年 9 月 17 日访问控制检查）。
+当前自动化测试结果：`57 passed`（2026 年 9 月 17 日本机 HTTPS 边界检查）。
 
 ## 数据库
 
@@ -113,6 +113,14 @@ backend\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --rel
 - API：`http://127.0.0.1:8000`
 - OpenAPI：`http://127.0.0.1:8000/docs`
 - 健康检查：`http://127.0.0.1:8000/api/v1/health`
+
+本机安全入口：
+
+```powershell
+.\scripts\start_secure_edge.ps1
+```
+
+默认访问 `https://localhost:8443`；内部 CA 未加入系统信任库时浏览器会提示证书不受信任。详见 `D:\MeetingMind\docs\HTTPS与反向代理.md`。
 
 ## 第四阶段接口
 
@@ -215,7 +223,7 @@ MP3 上传 → FFmpeg/WhisperX 转录（42,121 ms，3 个片段）
 ## 当前边界
 
 - 前端已在开发环境默认通过 Vite `/api` 代理调用真实后端；请在 `D:\MeetingMind\frontend` 执行 `npm run dev`。
-- 当前已提供单一部署级访问令牌，但仍需单独配置 HTTPS、前端静态托管、反向代理和受限跨域来源；多人环境还需要正式身份和角色授权。
+- 本机已提供 HTTPS/Caddy 静态前端和 API 反向代理；真实部署仍需实际域名、可信证书、防火墙和续期告警，多人环境还需要正式身份和角色授权。
 - 生产任务使用 Redis + RQ；Windows Worker 通过 `scripts\start_rq_worker.ps1` 默认以兼容 RQ 2.6.x 的 `rq.worker.SimpleWorker` 启动；Linux/macOS 使用 `rq.worker.SpawnWorker`。需要后台常驻时使用 `scripts\start_rq_worker_background.ps1`。
 - API 仅创建任务，实际音频处理在独立 Worker 中执行；Redis 不可用时 API 返回稳定错误码。
 

@@ -58,3 +58,17 @@ class AccessTokenMiddleware(BaseHTTPMiddleware):
             content={"detail": {"code": code, "message": message}},
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Apply non-cache and browser hardening headers to every API response."""
+
+    async def dispatch(self, request: Request, call_next: Callable):  # type: ignore[override]
+        response = await call_next(request)
+        if request.url.path.startswith("/api/"):
+            response.headers.setdefault("Cache-Control", "no-store")
+            response.headers.setdefault("X-Content-Type-Options", "nosniff")
+            response.headers.setdefault("X-Frame-Options", "DENY")
+            response.headers.setdefault("Referrer-Policy", "no-referrer")
+            response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+        return response
