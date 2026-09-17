@@ -178,6 +178,17 @@ if (-not $SkipLiveServer) {
         foreach ($property in @('diarization_status', 'speaker_count', 'stage_events')) {
             if ($jobProperties -notcontains $property) { throw "OpenAPI ProcessingJob 缺少字段 $property" }
         }
+
+        $uploadSchemaRef = $spec.paths.'/api/v1/meetings'.post.requestBody.content.'multipart/form-data'.schema.'$ref'
+        $uploadSchemaName = ($uploadSchemaRef -split '/')[-1]
+        $uploadProperties = $spec.components.schemas.$uploadSchemaName.properties.PSObject.Properties.Name
+        if ($uploadProperties -notcontains 'data_processing_confirmed') { throw 'OpenAPI 上传契约缺少 data_processing_confirmed' }
+
+        $analysisSchemaRef = $spec.paths.'/api/v1/meetings/{meeting_id}/analysis'.post.requestBody.content.'application/json'.schema.'$ref'
+        $analysisSchemaName = ($analysisSchemaRef -split '/')[-1]
+        $analysisProperties = $spec.components.schemas.$analysisSchemaName.properties.PSObject.Properties.Name
+        if ($analysisProperties -notcontains 'analysis_data_confirmed') { throw 'OpenAPI AI 分析契约缺少 analysis_data_confirmed' }
+
         if ($spec.info.title -ne 'MeetingMind API' -or -not $spec.tags) { throw 'OpenAPI 元数据或分组缺失' }
         Write-Pass '运行中 OpenAPI 文档与关键契约'
     } catch {

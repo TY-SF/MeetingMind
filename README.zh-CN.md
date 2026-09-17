@@ -22,7 +22,7 @@ MeetingMind 是一个本地优先的中文会议音频整理项目。
 
 统一运行数据目录的迁移与复验记录见 `D:\MeetingMind\docs\运行数据目录迁移记录-2026-09-17.md`。
 
-隐私、外部模型传输与无自动脱敏边界见 `D:\MeetingMind\docs\隐私与数据边界.md`。
+隐私、外部模型传输与无自动脱敏边界见 `D:\MeetingMind\docs\隐私与数据边界.md`。 验证记录见 `D:\MeetingMind\docs\隐私数据边界验证记录-2026-09-17.md`。
 
 ## 前端快速启动
 
@@ -47,8 +47,8 @@ backend\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --rel
 
 截至 2026 年 9 月 17 日：
 
-- 后端自动化测试：`51 passed`（以 2026 年 9 月 17 日数据目录迁移后发布检查为准）；
-- 前端 Vitest 单元测试：`14 passed`；
+- 后端自动化测试：`53 passed`（以 2026 年 9 月 17 日隐私边界发布检查为准）；
+- 前端 Vitest 单元测试：`16 passed`；
 - 前端类型检查和生产构建：通过；
 - 三组受控 Gold Standard：结构化输出成功率、待办 Precision/Recall、负责人、日期和状态指标均为 `1.0`；
 - 中断音频任务可在服务重启后从原始音频自动恢复；
