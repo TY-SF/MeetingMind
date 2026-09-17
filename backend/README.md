@@ -120,7 +120,7 @@ backend\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --rel
 .\scripts\start_secure_edge.ps1
 ```
 
-默认访问 `https://localhost:8443`；内部 CA 未加入系统信任库时浏览器会提示证书不受信任。详见 `D:\MeetingMind\docs\HTTPS与反向代理.md`。
+默认访问 `https://localhost:8443`；内部 CA 未加入系统信任库时浏览器会提示证书不受信任。详见 `D:\MeetingMind\docs\HTTPS与反向代理.md`。 验证记录见 `D:\MeetingMind\docs\HTTPS反向代理验证记录-2026-09-17.md`。
 
 ## 第四阶段接口
 
