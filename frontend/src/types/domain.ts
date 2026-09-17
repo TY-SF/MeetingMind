@@ -146,6 +146,7 @@ export interface CreateMeetingInput {
   meetingStartedAt: string
   participants: string[]
   context: string
+  dataProcessingConfirmed: boolean
 }
 
 export interface CreateMeetingResult {

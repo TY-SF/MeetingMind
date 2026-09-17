@@ -87,7 +87,7 @@ def test_pipeline_persists_successful_diarization(tmp_path, monkeypatch) -> None
         created = client.post(
             "/api/v1/meetings",
             files={"file": ("sample.wav", valid_wav_bytes(), "audio/wav")},
-            data={"title": "说话人分离测试"},
+            data={"data_processing_confirmed": "true", "title": "说话人分离测试"},
         ).json()
         deadline = time.time() + 5
         while time.time() < deadline:

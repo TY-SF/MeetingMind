@@ -149,18 +149,20 @@ function validateDraft() {
 
 async function generateAnalysis() {
   if (!meeting.value) return
-  if (analysis.value) {
-    try {
-      await ElMessageBox.confirm(
-        '重新生成会用新的 AI 草稿替换当前摘要、结论和待办；原始 AI 响应快照会更新。是否继续？',
-        '重新生成 AI 草稿',
-        { type: 'warning', confirmButtonText: '继续生成', cancelButtonText: '取消' },
-      )
-    } catch { return }
-  }
+  const replacementWarning = analysis.value
+    ? '重新生成还会替换当前摘要、结论和待办，并更新原始 AI 响应快照。'
+    : ''
+  try {
+    await ElMessageBox.confirm(
+      `系统将把带时间戳的转录文本和会议背景发送到已配置的模型服务；原始音频不会发送，系统也不会自动脱敏。请确认内容适合外发。${replacementWarning}`,
+      analysis.value ? '重新生成 AI 草稿' : '发送转录文本进行 AI 分析',
+      { type: 'warning', confirmButtonText: '确认发送并生成', cancelButtonText: '取消' },
+    )
+  } catch { return }
+
   generating.value = true
   try {
-    await store.generateAnalysis(meeting.value.id)
+    await store.generateAnalysis(meeting.value.id, true)
     syncDraft()
     editing.value = false
     await loadAudit()

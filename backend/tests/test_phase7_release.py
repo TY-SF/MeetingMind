@@ -41,7 +41,7 @@ def test_upload_returns_stable_503_and_persists_failed_job_when_queue_is_down(tm
         response = client.post(
             "/api/v1/meetings",
             files={"file": ("queue-down.wav", b"not-used-by-preflight", "audio/wav")},
-            data={"title": "队列不可用验收"},
+            data={"data_processing_confirmed": "true", "title": "队列不可用验收"},
         )
         assert response.status_code == 503
         detail = response.json()["detail"]

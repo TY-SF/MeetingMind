@@ -13,8 +13,11 @@ MeetingMind 的 API 契约由 FastAPI 在运行时生成。以运行中服务的
 ## 数据边界
 
 - 音频规范化、WhisperX 转录与 pyannote 说话人分离在本机执行。
-- 仅在调用 `POST /api/v1/meetings/{meeting_id}/analysis` 时，已保存的**转录文本**才会发送到已配置的模型服务；音频文件不会被该接口发送。
+- 仅在调用 `POST /api/v1/meetings/{meeting_id}/analysis` 时，带时间戳的转录文本、会议发生时间和会议背景才会发送到已配置的模型服务；原始音频不会被该接口发送。
+- 系统不会自动脱敏。上传前必须确认已获得录音处理授权；每次生成或重新生成 AI 草稿前必须确认转录内容适合外发。
 - `OPENAI_API_KEY`、`HF_TOKEN`、MySQL 密码只保存在 `backend/.env/meetingmind.env`，不能放入请求体、前端变量、截图或版本库。
+
+完整边界与部署注意事项见 `docs/隐私与数据边界.md`。
 
 ## 接口分组
 
@@ -29,7 +32,7 @@ MeetingMind 的 API 契约由 FastAPI 在运行时生成。以运行中服务的
 
 ## 上传与轮询流程
 
-1. `POST /api/v1/meetings` 使用 `multipart/form-data` 上传 `file`、`title`、`meeting_started_at`、`participants`、`context`。
+1. `POST /api/v1/meetings` 使用 `multipart/form-data` 上传 `file`、`title`、`meeting_started_at`、`participants`、`context`、`data_processing_confirmed=true`。
 2. 接口返回 `202 Accepted`、`meeting_id` 和 `job_id`，这表示任务已进入队列，**不表示处理完成**。
 3. 可并行轮询 `GET /api/v1/health/queue`；若 `worker_online=false`，应启动 Worker。
 4. 轮询 `GET /api/v1/jobs/{job_id}`，直到 `stage` 为 `SUCCEEDED` 或 `FAILED`。
@@ -43,10 +46,11 @@ curl.exe -X POST http://127.0.0.1:8000/api/v1/meetings `
   -F "title=产品迭代周会" `
   -F "meeting_started_at=2026-09-10T14:00:00+08:00" `
   -F "participants=[\"张三\",\"李四\"]" `
-  -F "context=确认版本范围与交付安排"
+  -F "context=确认版本范围与交付安排" `
+  -F "data_processing_confirmed=true"
 ```
 
-`participants` 是一个 **JSON 字符串数组**，不是逗号分隔文本；最多支持 10 人。音频仅支持 MP3、WAV、M4A，默认上限为 200 MB，实际值以后端配置和运行中的 OpenAPI 为准。
+`participants` 是一个 **JSON 字符串数组**，不是逗号分隔文本；最多支持 10 人。`data_processing_confirmed` 必须为 `true`，表示调用方已获得录音处理授权并理解系统不会自动脱敏；否则返回 `422 DATA_PROCESSING_CONFIRMATION_REQUIRED`。音频仅支持 MP3、WAV、M4A，默认上限为 200 MB，实际值以后端配置和运行中的 OpenAPI 为准。
 
 ## Redis/RQ 队列健康
 
@@ -81,7 +85,8 @@ QUEUED → PREPROCESSING → TRANSCRIBING → ALIGNING → DIARIZING → SUCCEED
 
 ## AI 审核与并发控制
 
-- `POST /analysis` 只在转录已存在且后端配置了模型服务凭据时可调用。
+- `POST /analysis` 只在转录已存在且后端配置了模型服务凭据时可调用；每次请求必须发送 `{ "analysis_data_confirmed": true }`。
+- 未确认时返回 `422 ANALYSIS_DATA_CONFIRMATION_REQUIRED`，不会调用模型服务。
 - `PATCH /analysis` 必须发送当前 `version`；保存成功后版本递增。
 - 版本已过期时，接口返回 `409` 和 `ANALYSIS_VERSION_CONFLICT`。调用方必须重新读取结果，不能以旧版本覆盖新审核内容。
 - `GET /analysis/audit` 返回 AI 原始草稿、当前人工结果以及发生变化的字段，便于演示人工审核边界。

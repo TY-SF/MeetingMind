@@ -1,5 +1,7 @@
 # MeetingMind 后端
 
+隐私、数据外发和无自动脱敏边界见 `D:\MeetingMind\docs\隐私与数据边界.md`。上传和每次 AI 分析都要求显式确认。
+
 ## 当前阶段：第七阶段本地单机发布候选
 
 截至 2026 年 9 月 17 日，第一至第六阶段已完成；第七阶段的发布门禁、真实运行态验收、故障恢复验收和版本化发布记录已完成。已验证：
@@ -112,7 +114,15 @@ POST  /api/v1/meetings/{meeting_id}/analysis
 PATCH /api/v1/meetings/{meeting_id}/analysis
 ```
 
-`POST` 需要会议已经有转录，并且本机已配置 OpenAI API Key。未配置密钥时返回：
+`POST` 需要会议已经有转录、本机已配置 OpenAI API Key，并在请求体中显式确认本次转录外发：
+
+```json
+{
+  "analysis_data_confirmed": true
+}
+```
+
+未确认时返回 `422 ANALYSIS_DATA_CONFIRMATION_REQUIRED`。未配置密钥时返回：
 
 ```json
 {

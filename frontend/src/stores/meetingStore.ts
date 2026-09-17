@@ -46,10 +46,10 @@ export const useMeetingStore = defineStore('meeting', {
         return job
       } catch (error) { this.error = messageFor(error, '重新处理任务失败'); throw error }
     },
-    async generateAnalysis(id: string): Promise<MeetingAnalysis> {
+    async generateAnalysis(id: string, analysisDataConfirmed: boolean): Promise<MeetingAnalysis> {
       this.error = ''
       try {
-        const analysis = await meetingApi.generateAnalysis(id)
+        const analysis = await meetingApi.generateAnalysis(id, analysisDataConfirmed)
         await this.refreshMeeting(id)
         return analysis
       } catch (error) { this.error = messageFor(error, '生成 AI 分析失败'); throw error }

@@ -7,7 +7,7 @@ export interface MeetingApi {
   getProcessingJob(id: string): Promise<ProcessingJob>
   retryProcessingJob(id: string): Promise<ProcessingJob>
   getQueueHealth(): Promise<QueueHealth>
-  generateAnalysis(id: string): Promise<MeetingAnalysis>
+  generateAnalysis(id: string, analysisDataConfirmed: boolean): Promise<MeetingAnalysis>
   getAnalysisAudit(id: string): Promise<AnalysisAudit>
   updateAnalysis(id: string, input: UpdateAnalysisInput): Promise<MeetingAnalysis>
   updateSpeakers(id: string, mappings: Array<{ speakerLabel: string; speakerName: string }>): Promise<Meeting>

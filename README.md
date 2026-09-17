@@ -23,6 +23,8 @@ MeetingMind 是一个本地优先的中文会议音频整理项目。
 
 统一运行数据目录的迁移与复验记录见 `D:\MeetingMind\docs\运行数据目录迁移记录-2026-09-17.md`。
 
+隐私、外部模型传输与无自动脱敏边界见 `D:\MeetingMind\docs\隐私与数据边界.md`。
+
 ## 第六阶段基础设施启动
 
 1. 将 `.env.compose.example` 复制为 `.env.compose`，填写两项 Docker 密码（该文件已被 Git 忽略）。

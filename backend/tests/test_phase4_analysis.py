@@ -173,6 +173,21 @@ def test_patch_analysis_updates_whole_draft_and_rejects_stale_version(tmp_path, 
         assert stale.json()["detail"]["code"] == "ANALYSIS_VERSION_CONFLICT"
 
 
+def test_analysis_requires_external_data_confirmation(tmp_path, monkeypatch) -> None:
+    from fastapi.testclient import TestClient
+    from app.main import create_app
+
+    monkeypatch.setenv("MEETINGMIND_ENV_FILE", str(tmp_path / "missing.env"))
+    app = create_app(data_dir=tmp_path)
+    _seed_analysis_api(app)
+
+    with TestClient(app) as client:
+        response = client.post("/api/v1/meetings/meeting-db-1/analysis")
+
+    assert response.status_code == 422
+    assert response.json()["detail"]["code"] == "ANALYSIS_DATA_CONFIRMATION_REQUIRED"
+
+
 def test_missing_api_key_does_not_change_transcript_or_job_state(tmp_path, monkeypatch) -> None:
     from fastapi.testclient import TestClient
     from app.main import create_app
@@ -185,7 +200,7 @@ def test_missing_api_key_does_not_change_transcript_or_job_state(tmp_path, monke
     before = app.state.store.get_meeting("meeting-db-1")
 
     with TestClient(app) as client:
-        response = client.post("/api/v1/meetings/meeting-db-1/analysis")
+        response = client.post("/api/v1/meetings/meeting-db-1/analysis", json={"analysis_data_confirmed": True})
         assert response.status_code == 503
         assert response.json()["detail"]["code"] == "MODEL_AUTH_ERROR"
 

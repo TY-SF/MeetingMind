@@ -1,6 +1,6 @@
 # MeetingMind 前后端 API 契约
 
-> 运行中 API 的权威 OpenAPI 文档：`http://127.0.0.1:8000/docs`、`/redoc`、`/openapi.json`。使用说明见 `docs/OpenAPI使用说明.md`。
+> 运行中 API 的权威 OpenAPI 文档：`http://127.0.0.1:8000/docs`、`/redoc`、`/openapi.json`。使用说明见 `docs/OpenAPI使用说明.md`；隐私与数据边界见 `docs/隐私与数据边界.md`。
 
 前端页面只通过 Pinia Store 和 `MeetingApi` 访问数据；默认实现为 `frontend/src/api/httpApi.ts`，不再使用 Mock API。
 
@@ -12,13 +12,15 @@
 - `GET /api/v1/jobs/{job_id}`：查询任务状态
 - `DELETE /api/v1/meetings/{meeting_id}`：永久删除会议、关联数据库记录和本地文件
 
-上传字段：`file`、`title`、`meeting_started_at`、`participants`（JSON 字符串数组）和 `context`。
+上传字段：`file`、`title`、`meeting_started_at`、`participants`（JSON 字符串数组）、`context` 和 `data_processing_confirmed`。确认字段必须为 `true`；否则返回 `422 DATA_PROCESSING_CONFIRMATION_REQUIRED`，且不会保存文件。
 
 ## AI 分析与人工审核
 
 - `GET /api/v1/meetings/{meeting_id}/analysis`：读取当前分析结果
-- `POST /api/v1/meetings/{meeting_id}/analysis`：将已经保存的转录发送给模型服务，生成结构化 AI 草稿
+- `POST /api/v1/meetings/{meeting_id}/analysis`：将已经保存的带时间戳转录、会议时间和背景发送给模型服务，生成结构化 AI 草稿；原始音频不会发送
 - `PATCH /api/v1/meetings/{meeting_id}/analysis`：整体保存人工审核结果
+
+每次 `POST /analysis` 必须发送 `{ "analysis_data_confirmed": true }`。缺失或为 `false` 时返回 `422 ANALYSIS_DATA_CONFIRMATION_REQUIRED`，不会调用模型服务。系统不会自动脱敏，调用方必须在每次生成或重新生成前自行确认内容适合外发。
 
 `PATCH` 请求必须包含当前 `version`。若版本过期，后端返回 `409` 和 `ANALYSIS_VERSION_CONFLICT`；前端会重新加载最新内容，避免覆盖他人的修改。
 

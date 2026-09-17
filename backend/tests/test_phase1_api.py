@@ -51,7 +51,7 @@ def test_create_meeting_runs_transcription_boundary(tmp_path: Path, monkeypatch)
         response = client.post(
             "/api/v1/meetings",
             files={"file": ("sample.wav", valid_wav_bytes(), "audio/wav")},
-            data={"title": "阶段二验证会议", "meeting_started_at": "2026-09-08T10:00:00+08:00", "participants": '["张三", "李四"]', "context": "验证真实处理边界。"},
+            data={"data_processing_confirmed": "true", "title": "阶段二验证会议", "meeting_started_at": "2026-09-08T10:00:00+08:00", "participants": '["张三", "李四"]', "context": "验证真实处理边界。"},
         )
         assert response.status_code == 202
         payload = response.json()
@@ -70,10 +70,23 @@ def test_create_meeting_runs_transcription_boundary(tmp_path: Path, monkeypatch)
     assert len(list((tmp_path / "runtime" / "meetings").glob("*/results/transcript.json"))) == 1
 
 
+def test_requires_recording_processing_confirmation(tmp_path: Path) -> None:
+    app = create_app(tmp_path / "runtime")
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/meetings",
+            files={"file": ("sample.wav", valid_wav_bytes(), "audio/wav")},
+            data={"title": "未确认隐私边界"},
+        )
+    assert response.status_code == 422
+    assert response.json()["detail"]["code"] == "DATA_PROCESSING_CONFIRMATION_REQUIRED"
+    assert not list((tmp_path / "runtime" / "meetings").glob("*/source/original.wav"))
+
+
 def test_rejects_unsupported_extension(tmp_path: Path) -> None:
     app = create_app(tmp_path / "runtime")
     with TestClient(app) as client:
-        response = client.post("/api/v1/meetings", files={"file": ("notes.txt", b"not audio", "text/plain")}, data={"title": "非法文件"})
+        response = client.post("/api/v1/meetings", files={"file": ("notes.txt", b"not audio", "text/plain")}, data={"data_processing_confirmed": "true", "title": "非法文件"})
     assert response.status_code == 415
 
 
@@ -109,7 +122,7 @@ def test_configured_upload_limit_is_enforced(tmp_path: Path, monkeypatch) -> Non
         response = client.post(
             "/api/v1/meetings",
             files={"file": ("too-large.wav", b"0" * (1024 * 1024 + 1), "audio/wav")},
-            data={"title": "上传上限验证"},
+            data={"data_processing_confirmed": "true", "title": "上传上限验证"},
         )
     assert response.status_code == 413
     assert "1 MB" in response.json()["detail"]
@@ -123,7 +136,7 @@ def test_accepts_browser_m4a_mime_type(tmp_path: Path, monkeypatch) -> None:
         response = client.post(
             "/api/v1/meetings",
             files={"file": ("sample.m4a", valid_wav_bytes(), "audio/x-m4a")},
-            data={"title": "M4A MIME 验证"},
+            data={"data_processing_confirmed": "true", "title": "M4A MIME 验证"},
         )
         assert response.status_code == 202
         payload = response.json()

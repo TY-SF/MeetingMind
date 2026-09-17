@@ -346,6 +346,7 @@ export const httpApi: MeetingApi = {
     form.append('meeting_started_at', input.meetingStartedAt)
     form.append('participants', JSON.stringify(input.participants))
     form.append('context', input.context.trim())
+    form.append('data_processing_confirmed', String(input.dataProcessingConfirmed))
     const payload = await request<{ meeting_id: string; job_id: string; status: CreateMeetingResult['status'] }>('/meetings', {
       method: 'POST',
       body: form,
@@ -371,8 +372,12 @@ export const httpApi: MeetingApi = {
       reconciledJobs: item.reconciled_jobs ?? 0,
     }
   },
-  async generateAnalysis(id) {
-    return toAnalysis(await request<RawAnalysis>(`/meetings/${encodeURIComponent(id)}/analysis`, { method: 'POST' }))
+  async generateAnalysis(id, analysisDataConfirmed) {
+    return toAnalysis(await request<RawAnalysis>(`/meetings/${encodeURIComponent(id)}/analysis`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ analysis_data_confirmed: analysisDataConfirmed }),
+    }))
   },
   async getAnalysisAudit(id) {
     return toAnalysisAudit(await request<RawAnalysisAudit>(`/meetings/${encodeURIComponent(id)}/analysis/audit`))

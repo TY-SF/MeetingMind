@@ -43,7 +43,7 @@ export const mockApi: MeetingApi = {
     meeting.status = 'PROCESSING'; meeting.updatedAt = updatedAt; save(meetings); return clone(job)
   },
   async getQueueHealth() { await wait(50); return { status: 'ready', redis: 'mock', workerOnline: true, workerCount: 1, queueLength: 0, intermediateJobCount: 0, startedJobCount: 0, reconciledJobs: 0 } },
-  async generateAnalysis(id): Promise<MeetingAnalysis> {
+  async generateAnalysis(id, _analysisDataConfirmed): Promise<MeetingAnalysis> {
     await wait(200); const meetings = load(); const index = meetings.findIndex((meeting) => meeting.id === id)
     if (index < 0) throw new Error('会议不存在或已被删除')
     const analysis: MeetingAnalysis = { summary: '这是 Mock 模式生成的会议摘要。', decisions: [], actionItems: [], version: 1, provider: 'mock', model: 'demo-model', promptVersion: 'mock-v1' }

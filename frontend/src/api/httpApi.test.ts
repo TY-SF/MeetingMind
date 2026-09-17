@@ -59,3 +59,45 @@ describe('httpApi processing job mapping', () => {
     expect(job.stageEvents).toEqual([])
   })
 })
+
+describe('httpApi privacy acknowledgements', () => {
+  it('includes the recording-processing acknowledgement in upload form data', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ meeting_id: 'meeting-1', job_id: 'job-1', status: 'QUEUED' }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await httpApi.createMeeting({
+      title: '隐私边界验证',
+      file: new File(['audio'], 'meeting.wav', { type: 'audio/wav' }),
+      meetingStartedAt: '2026-09-17T10:00:00.000Z',
+      participants: ['张三'],
+      context: '测试',
+      dataProcessingConfirmed: true,
+    })
+
+    const [, options] = fetchMock.mock.calls[0]
+    const form = options.body as FormData
+    expect(form.get('data_processing_confirmed')).toBe('true')
+  })
+
+  it('sends an explicit acknowledgement for every AI analysis request', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        summary: '摘要', decisions: [], action_items: [], version: 1,
+        provider: 'test', model: 'test-model', prompt_version: 'v1',
+      }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await httpApi.generateAnalysis('meeting/1', true)
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/meetings/meeting%2F1/analysis', expect.objectContaining({
+      method: 'POST',
+      headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ analysis_data_confirmed: true }),
+    }))
+  })
+})

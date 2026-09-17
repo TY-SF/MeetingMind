@@ -25,6 +25,13 @@ def test_openapi_groups_public_contract_and_diarization_fields(tmp_path, monkeyp
     upload = spec["paths"]["/api/v1/meetings"]["post"]
     assert upload["responses"]["202"]["description"] == "Successful Response"
     assert upload["tags"] == ["会议与处理任务"]
+    upload_schema_name = upload["requestBody"]["content"]["multipart/form-data"]["schema"]["$ref"].rsplit("/", 1)[-1]
+    assert "data_processing_confirmed" in spec["components"]["schemas"][upload_schema_name]["properties"]
+
+    analysis = spec["paths"]["/api/v1/meetings/{meeting_id}/analysis"]["post"]
+    analysis_schema_name = analysis["requestBody"]["content"]["application/json"]["schema"]["$ref"].rsplit("/", 1)[-1]
+    assert "analysis_data_confirmed" in spec["components"]["schemas"][analysis_schema_name]["properties"]
+
     schema = spec["components"]["schemas"]["ProcessingJob"]
     assert "diarization_status" in schema["properties"]
     assert "speaker_count" in schema["properties"]

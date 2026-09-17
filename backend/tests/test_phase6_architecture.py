@@ -37,7 +37,7 @@ def fake_transcribe(input_path: Path, working_dir: Path, results_dir: Path, mode
 
 def create_failed_meeting(client: TestClient, app, monkeypatch) -> dict:
     monkeypatch.setattr(main, "transcribe_audio", fake_transcribe)
-    response = client.post("/api/v1/meetings", files={"file": ("valid.wav", valid_wav_bytes(), "audio/wav")}, data={"title": "可重试会议", "expected_speakers": "2"})
+    response = client.post("/api/v1/meetings", files={"file": ("valid.wav", valid_wav_bytes(), "audio/wav")}, data={"data_processing_confirmed": "true", "title": "可重试会议", "expected_speakers": "2"})
     assert response.status_code == 202
     payload = response.json()
     deadline = time.time() + 3
@@ -54,7 +54,7 @@ def test_upload_has_sha256_preflight_and_request_id(tmp_path, monkeypatch) -> No
         response = client.post(
             "/api/v1/meetings",
             files={"file": ("valid.wav", valid_wav_bytes(), "audio/wav")},
-            data={"title": "媒体预检", "expected_speakers": "2"},
+            data={"data_processing_confirmed": "true", "title": "媒体预检", "expected_speakers": "2"},
             headers={"X-Request-ID": "phase6-test-request"},
         )
         assert response.status_code == 202
@@ -68,7 +68,7 @@ def test_rejects_real_media_validation_failure_with_stable_code(tmp_path, monkey
     app = create_app(tmp_path / "runtime")
     monkeypatch.setattr(main, "validate_audio_file", lambda *_args, **_kwargs: (_ for _ in ()).throw(AudioProcessingError("无音频流", code="NO_AUDIO_STREAM")))
     with TestClient(app) as client:
-        response = client.post("/api/v1/meetings", files={"file": ("invalid.wav", b"not audio", "audio/wav")}, data={"title": "无音频流"})
+        response = client.post("/api/v1/meetings", files={"file": ("invalid.wav", b"not audio", "audio/wav")}, data={"data_processing_confirmed": "true", "title": "无音频流"})
     assert response.status_code == 422
     assert response.json()["detail"]["code"] == "NO_AUDIO_STREAM"
 

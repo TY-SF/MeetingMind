@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile, status
+from fastapi import Body, FastAPI, File, Form, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
@@ -353,7 +353,8 @@ def create_app(data_dir: Path | None = None, database_url: str | None = None) ->
         summary="本地优先的中文会议音频整理 API",
         description=(
             "MeetingMind 在本机执行音频规范化、WhisperX 转录和 pyannote 说话人分离。"
-            "只有在调用 AI 分析接口时，已保存的转录文本才会发送至配置的模型服务。\n\n"
+            "只有在调用 AI 分析接口时，已保存的转录文本才会发送至配置的模型服务；原始音频不会发送。"
+            "系统不会自动脱敏，上传前必须确认已获得录音处理授权，调用 AI 前必须确认转录内容适合外发。\n\n"
             "处理任务为异步任务：上传接口返回 `202 Accepted` 后，请轮询任务接口直到阶段为 "
             "`SUCCEEDED` 或 `FAILED`。若说话人分离不可用，转录会保留，任务以 "
             "`SUCCEEDED_WITH_WARNINGS` 和 `diarization_status=DEGRADED` 标识降级。"
@@ -412,7 +413,11 @@ def create_app(data_dir: Path | None = None, database_url: str | None = None) ->
         status_code=status.HTTP_202_ACCEPTED,
         tags=["会议与处理任务"],
         summary="上传音频并创建异步处理任务",
-        description=f"支持 MP3、WAV、M4A，文件最大 {settings.max_upload_size_mb} MB。返回后请轮询 `GET /api/v1/jobs/{{job_id}}`。",
+        description=(
+            f"支持 MP3、WAV、M4A，文件最大 {settings.max_upload_size_mb} MB。音频保存在本机并在本机处理；"
+            "系统不会自动脱敏。调用方必须确认已获得录音处理授权并理解数据边界。"
+            "返回后请轮询 `GET /api/v1/jobs/{job_id}`。"
+        ),
         responses={415: {"description": "不支持的文件扩展名或 MIME 类型"}, 422: {"description": "表单字段校验失败"}},
     )
     async def create_meeting(
@@ -422,7 +427,19 @@ def create_app(data_dir: Path | None = None, database_url: str | None = None) ->
         participants: str = Form("[]", description="参会人 JSON 字符串数组，最多 10 人，例如 [\"张三\", \"李四\"]"),
         context: str = Form("", description="可选会议背景，最多 500 个字符"),
         expected_speakers: int | None = Form(None, description="可选预计说话人数，范围 2 到 10"),
+        data_processing_confirmed: bool = Form(
+            False,
+            description="确认已获得录音处理授权，并理解本地处理、外部模型调用和无自动脱敏的数据边界",
+        ),
     ) -> CreateMeetingResponse:
+        if not data_processing_confirmed:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "DATA_PROCESSING_CONFIRMATION_REQUIRED",
+                    "message": "请确认已获得录音处理授权，并理解系统不会自动脱敏",
+                },
+            )
         title = title.strip()
         context = context.strip()
         if not title:
@@ -583,8 +600,34 @@ def create_app(data_dir: Path | None = None, database_url: str | None = None) ->
             "prompt_version": current_analysis.get("prompt_version"),
         })
 
-    @app.post("/api/v1/meetings/{meeting_id}/analysis", response_model=MeetingAnalysis, tags=["AI 分析与审核"], summary="生成或重新生成 AI 分析草稿", description="只向模型服务提交已保存的转录文本；需要后端本机配置 OpenAI API Key。", responses={409: {"description": "转录尚未就绪"}, 503: {"description": "未配置模型服务凭据"}})
-    async def analyze_meeting(meeting_id: str) -> MeetingAnalysis:
+    @app.post(
+        "/api/v1/meetings/{meeting_id}/analysis",
+        response_model=MeetingAnalysis,
+        tags=["AI 分析与审核"],
+        summary="生成或重新生成 AI 分析草稿",
+        description=(
+            "只向已配置的模型服务提交带时间戳的转录文本和会议背景；原始音频不会发送。"
+            "系统不会自动脱敏，调用方必须在每次生成或重新生成前确认内容适合外发。"
+            "需要后端本机配置 OpenAI API Key。"
+        ),
+        responses={409: {"description": "转录尚未就绪"}, 422: {"description": "未确认外部模型数据传输"}, 503: {"description": "未配置模型服务凭据"}},
+    )
+    async def analyze_meeting(
+        meeting_id: str,
+        analysis_data_confirmed: bool = Body(
+            False,
+            embed=True,
+            description="确认转录文本和会议背景适合发送至已配置的模型服务，并理解系统不会自动脱敏",
+        ),
+    ) -> MeetingAnalysis:
+        if not analysis_data_confirmed:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "ANALYSIS_DATA_CONFIRMATION_REQUIRED",
+                    "message": "请确认转录内容适合发送至已配置的模型服务，并理解系统不会自动脱敏",
+                },
+            )
         meeting = store.get_meeting(meeting_id)
         if meeting is None:
             raise HTTPException(status_code=404, detail="会议不存在或已被删除")
