@@ -21,6 +21,8 @@ MeetingMind 是一个本地优先的中文会议音频整理项目。
 
 完整设计基线见 `D:\MeetingMind\MeetingMind开发设计文档.md`，后端说明见 `D:\MeetingMind\backend\README.md`。
 
+统一运行数据目录的迁移与复验记录见 `D:\MeetingMind\docs\运行数据目录迁移记录-2026-09-17.md`。
+
 ## 第六阶段基础设施启动
 
 1. 将 `.env.compose.example` 复制为 `.env.compose`，填写两项 Docker 密码（该文件已被 Git 忽略）。
@@ -56,7 +58,7 @@ backend\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --rel
 
 截至 2026 年 9 月 17 日：
 
-- 后端自动化测试：`50 passed`（以 2026 年 9 月 17 日发布检查为准）；
+- 后端自动化测试：`51 passed`（以 2026 年 9 月 17 日数据目录迁移后发布检查为准）；
 - 前端类型检查和生产构建：通过；
 - 三组受控 Gold Standard：结构化输出成功率、待办 Precision/Recall、负责人、日期和状态指标均为 `1.0`；
 - 中断音频任务可在服务重启后从原始音频自动恢复；

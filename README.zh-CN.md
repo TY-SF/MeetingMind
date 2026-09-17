@@ -20,6 +20,8 @@ MeetingMind 是一个本地优先的中文会议音频整理项目。
 
 完整设计基线见 `D:\MeetingMind\MeetingMind开发设计文档.md`，后端说明见 `D:\MeetingMind\backend\README.md`。
 
+统一运行数据目录的迁移与复验记录见 `D:\MeetingMind\docs\运行数据目录迁移记录-2026-09-17.md`。
+
 ## 前端快速启动
 
 先启动后端，再启动前端。前端会把 `/api` 请求代理到 `http://127.0.0.1:8000`：
@@ -43,7 +45,7 @@ backend\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --rel
 
 截至 2026 年 9 月 17 日：
 
-- 后端自动化测试：`50 passed`（以 2026 年 9 月 17 日发布检查为准）；
+- 后端自动化测试：`51 passed`（以 2026 年 9 月 17 日数据目录迁移后发布检查为准）；
 - 前端 Vitest 单元测试：`14 passed`；
 - 前端类型检查和生产构建：通过；
 - 三组受控 Gold Standard：结构化输出成功率、待办 Precision/Recall、负责人、日期和状态指标均为 `1.0`；
