@@ -233,3 +233,19 @@ MP3 上传 → FFmpeg/WhisperX 转录（42,121 ms，3 个片段）
 ## 阶段耗时记录
 
 `processing_stage_events` 持久化每次阶段执行的真实边界：`QUEUED`、`PREPROCESSING`、`TRANSCRIBING`、`DIARIZING`、`ANALYZING` 等阶段在状态切换时结束并计算耗时。自动恢复会保留原尝试并标记为 `INTERRUPTED`，新尝试使用递增的 `attempt` 编号。
+
+
+## 有界日志与运行监控
+
+API 与 RQ Worker 分别写入 `data/logs/api.jsonl` 和 `data/logs/worker.jsonl`。默认单文件 10 MiB、保留 5 个历史文件，可通过 `MEETINGMIND_LOG_MAX_BYTES` 和 `MEETINGMIND_LOG_BACKUP_COUNT` 调整。日志不得包含请求体、完整转录、模型原始响应或密钥。
+
+后台启动与本机监控：
+
+```powershell
+cd D:\MeetingMind
+.\scripts\start_api_background.ps1
+.\scripts\start_rq_worker_background.ps1
+.\scripts\check_operations.ps1 -TrustLocalCaddyCA
+```
+
+监控报告位于 `data/monitoring/latest.json`，退出码 0/1/2 分别代表 healthy/warning/critical。完整说明见 `docs/日志保留监控与告警.md`。

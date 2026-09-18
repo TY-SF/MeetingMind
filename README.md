@@ -13,7 +13,7 @@ MeetingMind 是一个本地优先的中文会议音频整理项目。
 - 已接入 WhisperX + pyannote 自动说话人分离，失败时保留转录并明确标记降级
 - 第六阶段：Redis + RQ、Docker Compose、媒体预检、WhisperX 对齐、任务重试、队列故障恢复、结构化日志与删除补偿，已完成
 - 第七阶段：发布级自动检查、Docker Compose 校验、Redis/RQ Worker 门禁、真实链路验收、故障恢复验收和无敏感值 JSON 检查报告已完成；当前为本地单机发布候选
-- 第八阶段进行中：部署级 Bearer 访问令牌和本机 HTTPS/Caddy 反向代理边界已完成；备份/恢复工具已实现，但当前运行数据存在数据库与会议目录不一致，真实恢复门禁尚未通过
+- 第八阶段进行中：访问令牌、HTTPS/Caddy、有界结构化日志和本地运行监控已实现；备份/恢复工具已实现，但当前数据库与会议目录不一致，完整恢复门禁尚未通过
 - Outlook Classic 已完成 ICS 实际导入验收，中文内容和 Asia/Shanghai 时间转换正确
 
 
@@ -24,7 +24,7 @@ MeetingMind 是一个本地优先的中文会议音频整理项目。
 
 统一运行数据目录的迁移与复验记录见 `D:\MeetingMind\docs\运行数据目录迁移记录-2026-09-17.md`。
 
-隐私、外部模型传输与无自动脱敏边界见 `D:\MeetingMind\docs\隐私与数据边界.md`。 访问控制与部署边界见 `D:\MeetingMind\docs\访问控制与部署边界.md`。 HTTPS 与反向代理见 `D:\MeetingMind\docs\HTTPS与反向代理.md`。 备份与恢复边界见 `D:\MeetingMind\docs\数据库与会议文件备份恢复.md`。 验证记录见 `D:\MeetingMind\docs\HTTPS反向代理验证记录-2026-09-17.md`。 验证记录见 `D:\MeetingMind\docs\访问控制验证记录-2026-09-17.md`。 验证记录见 `D:\MeetingMind\docs\隐私数据边界验证记录-2026-09-17.md`。
+隐私、外部模型传输与无自动脱敏边界见 `D:\MeetingMind\docs\隐私与数据边界.md`。 访问控制与部署边界见 `D:\MeetingMind\docs\访问控制与部署边界.md`。 HTTPS 与反向代理见 `D:\MeetingMind\docs\HTTPS与反向代理.md`。 备份与恢复边界见 `D:\MeetingMind\docs\数据库与会议文件备份恢复.md`。 日志与监控边界见 `D:\MeetingMind\docs\日志保留监控与告警.md`。 验证记录见 `D:\MeetingMind\docs\HTTPS反向代理验证记录-2026-09-17.md`。 验证记录见 `D:\MeetingMind\docs\访问控制验证记录-2026-09-17.md`。 验证记录见 `D:\MeetingMind\docs\隐私数据边界验证记录-2026-09-17.md`。
 
 ## 第六阶段基础设施启动
 
@@ -61,7 +61,7 @@ backend\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --rel
 
 截至 2026 年 9 月 17 日：
 
-- 后端自动化测试：`65 passed`（新增 8 个备份/恢复边界测试；完整发布复验待数据不一致解决后执行）；
+- 后端自动化测试：`70 passed`（包含备份/恢复、日志遮盖/轮转和运行监控边界测试；完整发布复验待数据不一致解决后执行）；
 - 前端 Vitest 单元测试：`18 passed`；
 - 前端类型检查和生产构建：通过；
 - 三组受控 Gold Standard：结构化输出成功率、待办 Precision/Recall、负责人、日期和状态指标均为 `1.0`；
