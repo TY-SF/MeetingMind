@@ -12,6 +12,11 @@ services:
       - "${MYSQL_PORT:-3306}:3306"
     volumes:
       - meetingmind_mysql:/var/lib/mysql
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD"]
       interval: 10s
@@ -28,6 +33,11 @@ services:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
       - meetingmind_redis:/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s

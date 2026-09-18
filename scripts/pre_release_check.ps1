@@ -3,6 +3,7 @@ param(
     [switch]$SkipFrontend,
     [switch]$SkipLiveServer,
     [switch]$SkipInfrastructure,
+    [switch]$SkipBackupRestore,
     [string]$ReportPath
 )
 
@@ -88,11 +89,18 @@ if (-not $SkipInfrastructure) {
             Invoke-External 'Docker Compose 配置校验' { & $docker.Source compose --env-file $composeEnvFile -f $composeFile config --quiet }
         }
         Invoke-External 'HTTPS/Caddy 边界配置校验' { & (Join-Path $root 'scripts\validate_secure_edge.ps1') }
+        if (-not $SkipBackupRestore) {
+            Invoke-External 'MySQL 与会议文件一致性备份及隔离恢复演练' {
+                & (Join-Path $root 'scripts\validate_backup_restore.ps1') -RemoveArchive
+            }
+        } else {
+            Write-Warn '已显式跳过备份与隔离恢复演练（-SkipBackupRestore）'
+        }
     } catch {
         Write-Fail "Docker Compose 检查：$($_.Exception.Message)"
     }
 } else {
-    Write-Warn '已跳过 Docker Compose 配置检查（-SkipInfrastructure）'
+    Write-Warn '已跳过 Docker Compose 配置检查（-SkipInfrastructure）'; Write-Warn '基础设施已跳过，因此未执行备份与隔离恢复演练'
 }
 
 if (-not (Test-Path $python)) { throw "未找到后端虚拟环境：$python" }

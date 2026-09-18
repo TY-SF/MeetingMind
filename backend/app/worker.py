@@ -12,7 +12,12 @@ from .observability import configure_logging
 def process_meeting_job(meeting_id: str) -> None:
     """RQ entry point. Must stay synchronous so RQ workers can invoke it."""
     settings = Settings.from_env()
-    configure_logging(settings.log_level)
+    configure_logging(
+        settings.log_level,
+        log_file=settings.data_dir / "logs" / "worker.jsonl",
+        max_bytes=settings.log_max_bytes,
+        backup_count=settings.log_backup_count,
+    )
     logger = logging.getLogger("meetingmind.worker")
     store = SqlAlchemyStore(settings.data_dir, settings.database_url)
     logger.info("rq_worker_job_started", extra={"meeting_id": meeting_id})

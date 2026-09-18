@@ -25,5 +25,7 @@ if ($WorkerClass -eq "auto") {
     $WorkerClass = if ($env:OS -eq "Windows_NT") { "simple" } else { "spawn" }
 }
 $workerClassPath = if ($WorkerClass -eq "simple") { "rq.worker.SimpleWorker" } else { "rq.worker.SpawnWorker" }
-Write-Host "Starting RQ worker: queue=$Queue worker_class=$workerClassPath redis=$redisUrl"
+& $python -c "import logging; from app.config import Settings; from app.observability import configure_logging; s=Settings.from_env(); configure_logging(s.log_level, log_file=s.data_dir / 'logs' / 'worker.jsonl', max_bytes=s.log_max_bytes, backup_count=s.log_backup_count); logging.getLogger('meetingmind.worker').info('rq_worker_host_starting')"
+if ($LASTEXITCODE -ne 0) { throw '无法初始化 Worker 结构化日志' }
+Write-Host "Starting RQ worker: queue=$Queue worker_class=$workerClassPath redis=configured"
 & $rq worker --url $redisUrl --worker-class $workerClassPath $Queue

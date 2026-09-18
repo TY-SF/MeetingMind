@@ -366,7 +366,12 @@ def create_app(data_dir: Path | None = None, database_url: str | None = None) ->
         lifespan=lifespan,
     )
     allowed_origins = [origin.strip() for origin in settings.frontend_origin.split(",") if origin.strip()]
-    configure_logging(settings.log_level)
+    configure_logging(
+        settings.log_level,
+        log_file=(data_dir or settings.data_dir) / "logs" / "api.jsonl",
+        max_bytes=settings.log_max_bytes,
+        backup_count=settings.log_backup_count,
+    )
     app.add_middleware(AccessTokenMiddleware, access_token=settings.api_access_token)
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RequestIdMiddleware)

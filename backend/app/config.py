@@ -86,6 +86,8 @@ class Settings:
     rq_reconciliation_interval_seconds: int
     queue_backend: str
     log_level: str
+    log_max_bytes: int
+    log_backup_count: int
 
     @classmethod
     def from_env(cls, base_dir: Path | None = None) -> "Settings":
@@ -148,5 +150,7 @@ class Settings:
             # `inline` is deliberately opt-in for isolated tests and emergency local
             # debugging. Normal development and deployment use Redis + RQ.
             queue_backend=(env_value("MEETINGMIND_QUEUE_BACKEND", file_values, "rq") or "rq").strip().lower(),
-            log_level=env_value("LOG_LEVEL", file_values, "INFO") or "INFO",
+            log_level=(env_value("LOG_LEVEL", file_values, "INFO") or "INFO").strip().upper(),
+            log_max_bytes=max(1024, int(env_value("MEETINGMIND_LOG_MAX_BYTES", file_values, "10485760") or "10485760")),
+            log_backup_count=max(1, int(env_value("MEETINGMIND_LOG_BACKUP_COUNT", file_values, "5") or "5")),
         )
