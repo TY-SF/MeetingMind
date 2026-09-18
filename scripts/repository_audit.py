@@ -86,11 +86,30 @@ def main() -> int:
                 issues.append(f"JSON 无效：{relative}:{exc.lineno}:{exc.colno}")
 
     for relative in REQUIRED_IGNORED_PATHS:
-        result = subprocess.run(
-            ["git", "-C", str(ROOT), "check-ignore", "--no-index", "--quiet", "--", relative],
-            check=False,
+        # A missing directory does not have a filesystem type for Git to infer,
+        # so a directory-only pattern such as ``frontend/dist/`` may not match
+        # the directory name itself in a clean CI checkout. Probe both the
+        # declared path and a synthetic child to validate the ignore rule
+        # without creating files in the working tree.
+        probes = (relative, f"{relative}/.codex-ignore-probe")
+        ignored = any(
+            subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(ROOT),
+                    "check-ignore",
+                    "--no-index",
+                    "--quiet",
+                    "--",
+                    probe,
+                ],
+                check=False,
+            ).returncode
+            == 0
+            for probe in probes
         )
-        if result.returncode != 0:
+        if not ignored:
             issues.append(f"敏感或生成路径未被忽略：{relative}")
 
     summary = {
