@@ -23,23 +23,30 @@
       "text": "全文搜索方案暂不决定，下次会议再评估。"
     },
     {
-      "speaker": "王五",
-      "voice_role": "zh_female",
-      "text": "我来整理全文搜索的成本和收益，尽快发到群里。"
+      "speaker": "张三",
+      "voice_role": "zh_female_alt",
+      "text": "张三负责整理全文搜索的成本和收益，尽快发到群里。"
     }
   ],
   "expected": {
     "decisions": [
       {
-        "keywords": ["全文搜索", "暂不决定"],
+        "keywords": [
+          "全文搜索",
+          "暂不决定"
+        ],
         "status": "UNRESOLVED"
       }
     ],
     "action_items": [
       {
-        "keywords": ["全文搜索", "成本", "收益"],
-        "assignee": "王五",
-        "assignee_status": "INFERRED",
+        "keywords": [
+          "全文搜索",
+          "成本",
+          "收益"
+        ],
+        "assignee": "张三",
+        "assignee_status": "EXPLICIT",
         "due_date": null
       }
     ]
