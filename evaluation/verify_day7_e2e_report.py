@@ -12,6 +12,9 @@ DEFAULT_FIXTURES = ROOT / "evaluation" / "audio_fixtures"
 DEFAULT_REPORT = ROOT / "evaluation" / "reports" / "day7-e2e-latest.json"
 FORBIDDEN_KEYS = {"access_token", "authorization", "api_key", "hf_token", "raw_result", "transcript", "summary"}
 
+if hasattr(__import__("sys").stdout, "reconfigure"):
+    __import__("sys").stdout.reconfigure(encoding="utf-8")
+
 
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()

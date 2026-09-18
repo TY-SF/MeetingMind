@@ -22,6 +22,9 @@ from evaluation.evaluate import evaluate_directory
 TERMINAL_STAGES = {"SUCCEEDED", "FAILED"}
 ACCEPTANCE_MINIMUM = 0.8
 
+if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
@@ -44,7 +47,9 @@ def git_commit() -> str | None:
 def json_write(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    with temporary.open("w", encoding="utf-8", newline="\n") as handle:
+        json.dump(payload, handle, ensure_ascii=False, indent=2)
+        handle.write("\n")
     temporary.replace(path)
 
 

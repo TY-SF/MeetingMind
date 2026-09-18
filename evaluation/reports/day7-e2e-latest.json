@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-09-18T09:01:23.795575+00:00",
+  "generated_at": "2026-09-18T09:12:33.902380+00:00",
   "project": "MeetingMind",
   "acceptance_target": "Day 7",
-  "git_commit": "fcb41b161e7f0c9571a73b054ef61dfbc6691fb6",
+  "git_commit": "3aa39fcb3a33aa85160f6c4419ca55e51f4ee8aa",
   "base_url": "http://127.0.0.1:8000",
   "privacy": "报告不包含访问令牌、音频正文、完整转录、会议摘要或模型原始响应。",
   "cases": [
     {
       "id": "01_audio_clear_structured",
       "status": "passed",
-      "fixture_sha256": "573f12a10b19a6deef92178b1c99297fb8cf07fc95d38dd97bc5d6181511bb41",
+      "fixture_sha256": "1b90327f10e0be147eac44df75fb6f77714ae4a4b8f7cab11e89afc7ef88e171",
       "audio_sha256": "a7d0171e713d7759c4970974f7d0b2a25e098d8b1682b390b3a7ce687fd57a48",
       "audio_size_bytes": 695786,
       "synthetic_audio": true,
@@ -22,31 +22,31 @@
           {
             "stage": "QUEUED",
             "status": null,
-            "duration_ms": 652,
+            "duration_ms": 131,
             "attempt": 0
           },
           {
             "stage": "PREPROCESSING",
             "status": null,
-            "duration_ms": 3061,
+            "duration_ms": 115,
             "attempt": 0
           },
           {
             "stage": "TRANSCRIBING",
             "status": null,
-            "duration_ms": 14975,
+            "duration_ms": 22553,
             "attempt": 0
           },
           {
             "stage": "ALIGNING",
             "status": null,
-            "duration_ms": 10772,
+            "duration_ms": 9833,
             "attempt": 0
           },
           {
             "stage": "DIARIZING",
             "status": null,
-            "duration_ms": 4120,
+            "duration_ms": 3140,
             "attempt": 0
           }
         ]
@@ -68,7 +68,7 @@
     {
       "id": "02_audio_disagreement_uncertain",
       "status": "passed",
-      "fixture_sha256": "7dfa4a3362d798b2833da226a4734b337c728f109eec040b31b79f0b6d2c7eec",
+      "fixture_sha256": "c76775021cf118f39c73ffdf921b6ab4e63251a3e5ec521ae9233b02750dd83e",
       "audio_sha256": "50246c73ffe79af3c9a6a6578c776e3216db885ca248f6bd476c887c15730bf9",
       "audio_size_bytes": 839588,
       "synthetic_audio": true,
@@ -81,31 +81,31 @@
           {
             "stage": "QUEUED",
             "status": null,
-            "duration_ms": 121,
+            "duration_ms": 126,
             "attempt": 0
           },
           {
             "stage": "PREPROCESSING",
             "status": null,
-            "duration_ms": 108,
+            "duration_ms": 111,
             "attempt": 0
           },
           {
             "stage": "TRANSCRIBING",
             "status": null,
-            "duration_ms": 18610,
+            "duration_ms": 6613,
             "attempt": 0
           },
           {
             "stage": "ALIGNING",
             "status": null,
-            "duration_ms": 9103,
+            "duration_ms": 25567,
             "attempt": 0
           },
           {
             "stage": "DIARIZING",
             "status": null,
-            "duration_ms": 3313,
+            "duration_ms": 3567,
             "attempt": 0
           }
         ]
@@ -127,7 +127,7 @@
     {
       "id": "03_audio_noise_overlap_english",
       "status": "passed",
-      "fixture_sha256": "02f2d91fb975582658c9f683517ad5f2d48fbc8f828664819a1f66bec8d90ab5",
+      "fixture_sha256": "66ebca4e5111b640e7d4e6bd9b20f4d5baa061485a1b8b13304595cd59559423",
       "audio_sha256": "869ebfd3a8071f0a8118447c43edbdf3c1a6b9d914c8c5156bfe5ab438941551",
       "audio_size_bytes": 832078,
       "synthetic_audio": true,
@@ -140,31 +140,31 @@
           {
             "stage": "QUEUED",
             "status": null,
-            "duration_ms": 121,
+            "duration_ms": 108,
             "attempt": 0
           },
           {
             "stage": "PREPROCESSING",
             "status": null,
-            "duration_ms": 108,
+            "duration_ms": 105,
             "attempt": 0
           },
           {
             "stage": "TRANSCRIBING",
             "status": null,
-            "duration_ms": 3430,
+            "duration_ms": 18879,
             "attempt": 0
           },
           {
             "stage": "ALIGNING",
             "status": null,
-            "duration_ms": 8566,
+            "duration_ms": 9927,
             "attempt": 0
           },
           {
             "stage": "DIARIZING",
             "status": null,
-            "duration_ms": 2936,
+            "duration_ms": 3804,
             "attempt": 0
           }
         ]
@@ -176,7 +176,7 @@
         "model": "gpt-5.6-terra",
         "prompt_version": "meeting_analysis_v1",
         "version": 1,
-        "decision_count": 2,
+        "decision_count": 1,
         "action_item_count": 1
       },
       "markdown_export": "passed",
