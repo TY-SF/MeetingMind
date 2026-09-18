@@ -87,7 +87,7 @@ def main() -> int:
 
     for relative in REQUIRED_IGNORED_PATHS:
         result = subprocess.run(
-            ["git", "-C", str(ROOT), "check-ignore", "--quiet", "--", relative],
+            ["git", "-C", str(ROOT), "check-ignore", "--no-index", "--quiet", "--", relative],
             check=False,
         )
         if result.returncode != 0:
