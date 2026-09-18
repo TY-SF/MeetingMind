@@ -13,7 +13,7 @@ MeetingMind 是一个本地优先的中文会议音频整理项目。
 - 已接入 WhisperX + pyannote 自动说话人分离，失败时保留转录并明确标记降级
 - 第六阶段：Redis + RQ、Docker Compose、媒体预检、WhisperX 对齐、任务重试、队列故障恢复、结构化日志与删除补偿，已完成
 - 第七阶段：发布级自动检查、Docker Compose 校验、Redis/RQ Worker 门禁、真实链路验收、故障恢复验收和无敏感值 JSON 检查报告已完成；当前为本地单机发布候选
-- 第八阶段进行中：访问令牌、HTTPS/Caddy、有界结构化日志和本地运行监控已实现；备份/恢复工具已实现，但当前数据库与会议目录不一致，完整恢复门禁尚未通过
+- 第八阶段进行中：访问令牌、HTTPS/Caddy、一致性备份与隔离恢复、有界结构化日志和本地运行监控已完成；下一项为容量、限流与正式多人身份系统
 - Outlook Classic 已完成 ICS 实际导入验收，中文内容和 Asia/Shanghai 时间转换正确
 
 
@@ -61,7 +61,7 @@ backend\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --rel
 
 截至 2026 年 9 月 17 日：
 
-- 后端自动化测试：`70 passed`（包含备份/恢复、日志遮盖/轮转和运行监控边界测试；完整发布复验待数据不一致解决后执行）；
+- 后端自动化测试：`70 passed`（包含备份/恢复、日志遮盖/轮转和运行监控边界测试）；
 - 前端 Vitest 单元测试：`18 passed`；
 - 前端类型检查和生产构建：通过；
 - 三组受控 Gold Standard：结构化输出成功率、待办 Precision/Recall、负责人、日期和状态指标均为 `1.0`；
