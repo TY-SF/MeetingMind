@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-09-18T09:12:33.902380+00:00",
+  "generated_at": "2026-09-18T09:43:01.417427+00:00",
   "project": "MeetingMind",
   "acceptance_target": "Day 7",
-  "git_commit": "3aa39fcb3a33aa85160f6c4419ca55e51f4ee8aa",
+  "git_commit": "2b6ac129f08f3cf17c50923b02cedd9cfa7b662b",
   "base_url": "http://127.0.0.1:8000",
   "privacy": "报告不包含访问令牌、音频正文、完整转录、会议摘要或模型原始响应。",
   "cases": [
@@ -22,31 +22,31 @@
           {
             "stage": "QUEUED",
             "status": null,
-            "duration_ms": 131,
+            "duration_ms": 111,
             "attempt": 0
           },
           {
             "stage": "PREPROCESSING",
             "status": null,
-            "duration_ms": 115,
+            "duration_ms": 114,
             "attempt": 0
           },
           {
             "stage": "TRANSCRIBING",
             "status": null,
-            "duration_ms": 22553,
+            "duration_ms": 2786,
             "attempt": 0
           },
           {
             "stage": "ALIGNING",
             "status": null,
-            "duration_ms": 9833,
+            "duration_ms": 10018,
             "attempt": 0
           },
           {
             "stage": "DIARIZING",
             "status": null,
-            "duration_ms": 3140,
+            "duration_ms": 3371,
             "attempt": 0
           }
         ]
@@ -81,31 +81,31 @@
           {
             "stage": "QUEUED",
             "status": null,
-            "duration_ms": 126,
+            "duration_ms": 128,
             "attempt": 0
           },
           {
             "stage": "PREPROCESSING",
             "status": null,
-            "duration_ms": 111,
+            "duration_ms": 105,
             "attempt": 0
           },
           {
             "stage": "TRANSCRIBING",
             "status": null,
-            "duration_ms": 6613,
+            "duration_ms": 2464,
             "attempt": 0
           },
           {
             "stage": "ALIGNING",
             "status": null,
-            "duration_ms": 25567,
+            "duration_ms": 9258,
             "attempt": 0
           },
           {
             "stage": "DIARIZING",
             "status": null,
-            "duration_ms": 3567,
+            "duration_ms": 3153,
             "attempt": 0
           }
         ]
@@ -140,7 +140,7 @@
           {
             "stage": "QUEUED",
             "status": null,
-            "duration_ms": 108,
+            "duration_ms": 105,
             "attempt": 0
           },
           {
@@ -152,19 +152,19 @@
           {
             "stage": "TRANSCRIBING",
             "status": null,
-            "duration_ms": 18879,
+            "duration_ms": 3230,
             "attempt": 0
           },
           {
             "stage": "ALIGNING",
             "status": null,
-            "duration_ms": 9927,
+            "duration_ms": 9712,
             "attempt": 0
           },
           {
             "stage": "DIARIZING",
             "status": null,
-            "duration_ms": 3804,
+            "duration_ms": 3231,
             "attempt": 0
           }
         ]
@@ -176,7 +176,7 @@
         "model": "gpt-5.6-terra",
         "prompt_version": "meeting_analysis_v1",
         "version": 1,
-        "decision_count": 1,
+        "decision_count": 2,
         "action_item_count": 1
       },
       "markdown_export": "passed",

@@ -21,6 +21,8 @@ from evaluation.evaluate import evaluate_directory
 
 TERMINAL_STAGES = {"SUCCEEDED", "FAILED"}
 ACCEPTANCE_MINIMUM = 0.8
+ANALYSIS_MAX_ATTEMPTS = 3
+ANALYSIS_RETRYABLE_STATUS_CODES = {502, 503, 504}
 
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -133,6 +135,30 @@ def stage_summary(job: dict[str, Any]) -> list[dict[str, Any]]:
     return result
 
 
+def request_analysis_with_retry(client: httpx.Client, meeting_id: str) -> dict[str, Any]:
+    """Retry only transient model transport failures; never hide a semantic 4xx failure."""
+    last_error = "生成 AI 分析失败"
+    for attempt in range(1, ANALYSIS_MAX_ATTEMPTS + 1):
+        try:
+            response = client.post(
+                f"/api/v1/meetings/{meeting_id}/analysis",
+                json={"analysis_data_confirmed": True},
+                timeout=300.0,
+            )
+            if response.status_code == 200:
+                return response.json()
+            last_error = response_detail(response)
+            if response.status_code not in ANALYSIS_RETRYABLE_STATUS_CODES or attempt == ANALYSIS_MAX_ATTEMPTS:
+                raise RuntimeError(f"生成 AI 分析失败：{last_error}")
+        except (httpx.ConnectError, httpx.ReadTimeout, httpx.RemoteProtocolError) as exc:
+            last_error = f"{type(exc).__name__}: {exc}".strip()
+            if attempt == ANALYSIS_MAX_ATTEMPTS:
+                raise RuntimeError(f"生成 AI 分析失败：{last_error}") from exc
+        print(f"  AI 分析暂时失败，第 {attempt}/{ANALYSIS_MAX_ATTEMPTS} 次重试前等待 5 秒：{last_error}")
+        time.sleep(5)
+    raise RuntimeError(f"生成 AI 分析失败：{last_error}")
+
+
 def run_case(
     client: httpx.Client,
     fixture_path: Path,
@@ -193,15 +219,7 @@ def run_case(
         result["speaker_mapping_count"] = map_speakers(client, meeting_id, meeting, fixture)
 
         print(f"[{case_id}] 请求结构化 AI 分析")
-        analysis = require(
-            client.post(
-                f"/api/v1/meetings/{meeting_id}/analysis",
-                json={"analysis_data_confirmed": True},
-                timeout=max(180.0, client.timeout.read or 0.0),
-            ),
-            200,
-            "生成 AI 分析",
-        ).json()
+        analysis = request_analysis_with_retry(client, meeting_id)
         prediction = {
             "fixture_id": case_id,
             "provider": analysis.get("provider"),
@@ -274,6 +292,12 @@ def main() -> None:
     missing_audio = [path.stem for path in fixture_paths if not (args.audio_dir / f"{path.stem}.wav").is_file()]
     if missing_audio:
         raise SystemExit(f"缺少验收音频：{', '.join(missing_audio)}；先运行 scripts/generate_day7_audio_fixtures.ps1")
+
+    args.predictions.mkdir(parents=True, exist_ok=True)
+    # Do not let a previous run's prediction make an incomplete current run look complete.
+    for fixture_path in fixture_paths:
+        stale_prediction = args.predictions / fixture_path.name
+        stale_prediction.unlink(missing_ok=True)
 
     settings = Settings.from_env()
     headers = {"Authorization": f"Bearer {settings.api_access_token}"} if settings.api_access_token else {}
