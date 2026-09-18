@@ -1,0 +1,43 @@
+{
+  "id": "03_audio_noise_overlap_english",
+  "title": "噪音重叠与英文术语",
+  "meeting_started_at": "2026-09-18T16:00:00+08:00",
+  "context": "Release Candidate 发布评审；录音包含轻微背景噪音、短暂重叠发言和英文技术术语",
+  "expected_speakers": 2,
+  "audio_profile": "noise_overlap",
+  "calendar_expected": true,
+  "segments": [
+    {
+      "speaker": "陈晨",
+      "voice_role": "zh_female",
+      "text": "Release Candidate 的 go no go 结论是按计划发布。"
+    },
+    {
+      "speaker": "刘洋",
+      "voice_role": "zh_male",
+      "overlap_previous_ms": 280,
+      "text": "刘洋负责完成 API regression 接口回归测试，截止日期是二零二六年九月十九日。"
+    },
+    {
+      "speaker": "陈晨",
+      "voice_role": "zh_female",
+      "text": "现在确认二零二六年九月二十日十八点发布 RC，如果回归失败再延期。"
+    }
+  ],
+  "expected": {
+    "decisions": [
+      {
+        "keywords": ["发布", "RC"],
+        "status": "CONFIRMED"
+      }
+    ],
+    "action_items": [
+      {
+        "keywords": ["API", "回归"],
+        "assignee": "刘洋",
+        "assignee_status": "EXPLICIT",
+        "due_date": "2026-09-19"
+      }
+    ]
+  }
+}

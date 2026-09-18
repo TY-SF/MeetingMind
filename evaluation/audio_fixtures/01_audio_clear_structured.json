@@ -1,0 +1,42 @@
+{
+  "id": "01_audio_clear_structured",
+  "title": "清晰结构化双人会议",
+  "meeting_started_at": "2026-09-18T09:00:00+08:00",
+  "context": "项目后端技术评审",
+  "expected_speakers": 2,
+  "audio_profile": "clean",
+  "calendar_expected": true,
+  "segments": [
+    {
+      "speaker": "张三",
+      "voice_role": "zh_male",
+      "text": "今天确定后端采用 FastAPI 和 MySQL 八，这个方案正式通过。"
+    },
+    {
+      "speaker": "李四",
+      "voice_role": "zh_female",
+      "text": "接口文档由张三负责，截止到二零二六年九月二十日。"
+    },
+    {
+      "speaker": "张三",
+      "voice_role": "zh_male",
+      "text": "确认，我会按这个时间完成接口文档。"
+    }
+  ],
+  "expected": {
+    "decisions": [
+      {
+        "keywords": ["FastAPI", "MySQL"],
+        "status": "CONFIRMED"
+      }
+    ],
+    "action_items": [
+      {
+        "keywords": ["接口文档"],
+        "assignee": "张三",
+        "assignee_status": "EXPLICIT",
+        "due_date": "2026-09-20"
+      }
+    ]
+  }
+}

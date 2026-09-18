@@ -3,6 +3,7 @@ name: MeetingMind CI
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -30,6 +31,14 @@ jobs:
         run: python -m pytest -q backend/tests
       - name: Verify committed Gold Standard report inputs
         run: python evaluation/evaluate.py --output /tmp/meetingmind-evaluation.json --minimum 0.8
+      - name: Verify committed Day-7 audio end-to-end evidence
+        run: python evaluation/verify_day7_e2e_report.py
+      - name: Upload Day-7 acceptance evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: day7-acceptance-evidence
+          path: evaluation/reports/day7-e2e-latest.json
+          if-no-files-found: error
 
   frontend-build:
     name: Frontend type-check and build (Node 22)

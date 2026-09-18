@@ -1,0 +1,47 @@
+{
+  "id": "02_audio_disagreement_uncertain",
+  "title": "建议分歧与未确定表达",
+  "meeting_started_at": "2026-09-18T14:00:00+08:00",
+  "context": "讨论是否增加全文搜索",
+  "expected_speakers": 3,
+  "audio_profile": "clean",
+  "calendar_expected": false,
+  "segments": [
+    {
+      "speaker": "王五",
+      "voice_role": "zh_female",
+      "text": "我建议下个月上线全文搜索，这只是我的建议。"
+    },
+    {
+      "speaker": "李四",
+      "voice_role": "zh_male",
+      "text": "我不同意现在上线，成本和工期都没有评估。"
+    },
+    {
+      "speaker": "张三",
+      "voice_role": "zh_female_alt",
+      "text": "全文搜索方案暂不决定，下次会议再评估。"
+    },
+    {
+      "speaker": "王五",
+      "voice_role": "zh_female",
+      "text": "我来整理全文搜索的成本和收益，尽快发到群里。"
+    }
+  ],
+  "expected": {
+    "decisions": [
+      {
+        "keywords": ["全文搜索", "暂不决定"],
+        "status": "UNRESOLVED"
+      }
+    ],
+    "action_items": [
+      {
+        "keywords": ["全文搜索", "成本", "收益"],
+        "assignee": "王五",
+        "assignee_status": "INFERRED",
+        "due_date": null
+      }
+    ]
+  }
+}

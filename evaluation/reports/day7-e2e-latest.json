@@ -1,0 +1,225 @@
+{
+  "generated_at": "2026-09-18T09:01:23.795575+00:00",
+  "project": "MeetingMind",
+  "acceptance_target": "Day 7",
+  "git_commit": "fcb41b161e7f0c9571a73b054ef61dfbc6691fb6",
+  "base_url": "http://127.0.0.1:8000",
+  "privacy": "报告不包含访问令牌、音频正文、完整转录、会议摘要或模型原始响应。",
+  "cases": [
+    {
+      "id": "01_audio_clear_structured",
+      "status": "passed",
+      "fixture_sha256": "573f12a10b19a6deef92178b1c99297fb8cf07fc95d38dd97bc5d6181511bb41",
+      "audio_sha256": "a7d0171e713d7759c4970974f7d0b2a25e098d8b1682b390b3a7ce687fd57a48",
+      "audio_size_bytes": 695786,
+      "synthetic_audio": true,
+      "audio_job": {
+        "stage": "SUCCEEDED",
+        "retry_count": 0,
+        "diarization_status": "SUCCEEDED",
+        "speaker_count": 1,
+        "stage_events": [
+          {
+            "stage": "QUEUED",
+            "status": null,
+            "duration_ms": 652,
+            "attempt": 0
+          },
+          {
+            "stage": "PREPROCESSING",
+            "status": null,
+            "duration_ms": 3061,
+            "attempt": 0
+          },
+          {
+            "stage": "TRANSCRIBING",
+            "status": null,
+            "duration_ms": 14975,
+            "attempt": 0
+          },
+          {
+            "stage": "ALIGNING",
+            "status": null,
+            "duration_ms": 10772,
+            "attempt": 0
+          },
+          {
+            "stage": "DIARIZING",
+            "status": null,
+            "duration_ms": 4120,
+            "attempt": 0
+          }
+        ]
+      },
+      "transcript_segment_count": 1,
+      "speaker_mapping_count": 1,
+      "analysis": {
+        "provider": "openai",
+        "model": "gpt-5.6-terra",
+        "prompt_version": "meeting_analysis_v1",
+        "version": 1,
+        "decision_count": 1,
+        "action_item_count": 1
+      },
+      "markdown_export": "passed",
+      "calendar_export": "passed",
+      "deletion_verified": true
+    },
+    {
+      "id": "02_audio_disagreement_uncertain",
+      "status": "passed",
+      "fixture_sha256": "7dfa4a3362d798b2833da226a4734b337c728f109eec040b31b79f0b6d2c7eec",
+      "audio_sha256": "50246c73ffe79af3c9a6a6578c776e3216db885ca248f6bd476c887c15730bf9",
+      "audio_size_bytes": 839588,
+      "synthetic_audio": true,
+      "audio_job": {
+        "stage": "SUCCEEDED",
+        "retry_count": 0,
+        "diarization_status": "SUCCEEDED",
+        "speaker_count": 1,
+        "stage_events": [
+          {
+            "stage": "QUEUED",
+            "status": null,
+            "duration_ms": 121,
+            "attempt": 0
+          },
+          {
+            "stage": "PREPROCESSING",
+            "status": null,
+            "duration_ms": 108,
+            "attempt": 0
+          },
+          {
+            "stage": "TRANSCRIBING",
+            "status": null,
+            "duration_ms": 18610,
+            "attempt": 0
+          },
+          {
+            "stage": "ALIGNING",
+            "status": null,
+            "duration_ms": 9103,
+            "attempt": 0
+          },
+          {
+            "stage": "DIARIZING",
+            "status": null,
+            "duration_ms": 3313,
+            "attempt": 0
+          }
+        ]
+      },
+      "transcript_segment_count": 1,
+      "speaker_mapping_count": 1,
+      "analysis": {
+        "provider": "openai",
+        "model": "gpt-5.6-terra",
+        "prompt_version": "meeting_analysis_v1",
+        "version": 1,
+        "decision_count": 1,
+        "action_item_count": 1
+      },
+      "markdown_export": "passed",
+      "calendar_export": "correctly_rejected",
+      "deletion_verified": true
+    },
+    {
+      "id": "03_audio_noise_overlap_english",
+      "status": "passed",
+      "fixture_sha256": "02f2d91fb975582658c9f683517ad5f2d48fbc8f828664819a1f66bec8d90ab5",
+      "audio_sha256": "869ebfd3a8071f0a8118447c43edbdf3c1a6b9d914c8c5156bfe5ab438941551",
+      "audio_size_bytes": 832078,
+      "synthetic_audio": true,
+      "audio_job": {
+        "stage": "SUCCEEDED",
+        "retry_count": 0,
+        "diarization_status": "SUCCEEDED",
+        "speaker_count": 1,
+        "stage_events": [
+          {
+            "stage": "QUEUED",
+            "status": null,
+            "duration_ms": 121,
+            "attempt": 0
+          },
+          {
+            "stage": "PREPROCESSING",
+            "status": null,
+            "duration_ms": 108,
+            "attempt": 0
+          },
+          {
+            "stage": "TRANSCRIBING",
+            "status": null,
+            "duration_ms": 3430,
+            "attempt": 0
+          },
+          {
+            "stage": "ALIGNING",
+            "status": null,
+            "duration_ms": 8566,
+            "attempt": 0
+          },
+          {
+            "stage": "DIARIZING",
+            "status": null,
+            "duration_ms": 2936,
+            "attempt": 0
+          }
+        ]
+      },
+      "transcript_segment_count": 1,
+      "speaker_mapping_count": 1,
+      "analysis": {
+        "provider": "openai",
+        "model": "gpt-5.6-terra",
+        "prompt_version": "meeting_analysis_v1",
+        "version": 1,
+        "decision_count": 2,
+        "action_item_count": 1
+      },
+      "markdown_export": "passed",
+      "calendar_export": "passed",
+      "deletion_verified": true
+    }
+  ],
+  "queue": {
+    "status": "ready",
+    "redis": "ok",
+    "worker_online": true
+  },
+  "metrics": {
+    "sample_count": 3,
+    "structured_output_success_rate": 1.0,
+    "action_item_precision": 1.0,
+    "action_item_recall": 1.0,
+    "assignee_accuracy": 1.0,
+    "assignee_status_accuracy": 1.0,
+    "due_date_accuracy": 1.0,
+    "decision_status_accuracy": 1.0
+  },
+  "totals": {
+    "expected_decisions": 3,
+    "matched_decisions": 3,
+    "correct_decision_statuses": 3,
+    "expected_actions": 3,
+    "predicted_actions": 3,
+    "matched_actions": 3,
+    "matched_predicted_actions": 3,
+    "assignee_checks": 3,
+    "correct_assignees": 3,
+    "assignee_status_checks": 3,
+    "correct_assignee_statuses": 3,
+    "due_date_checks": 3,
+    "correct_due_dates": 3
+  },
+  "acceptance": {
+    "status": "passed",
+    "required_sample_count": 3,
+    "structured_output_success_required": 1.0,
+    "other_metric_minimum": 0.8,
+    "case_failures": [],
+    "metric_failures": {}
+  }
+}
