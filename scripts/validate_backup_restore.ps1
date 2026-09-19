@@ -1,6 +1,6 @@
 ﻿[CmdletBinding()]
 param(
-    [string]$DataDir = (Join-Path $PSScriptRoot '..\data'),
+    [string]$DataDir,
     [string]$OutputPath,
     [string]$Container = 'meetingmind-mysql',
     [string]$Database = 'meetingmind',
@@ -10,6 +10,9 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $root = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+if ([string]::IsNullOrWhiteSpace($DataDir)) {
+    $DataDir = Join-Path $root 'data'
+}
 $venv = (& (Join-Path $root 'scripts\resolve_runtime_venv.ps1') | Select-Object -Last 1).Trim()
 $python = Join-Path $venv 'Scripts\python.exe'
 $cli = Join-Path $root 'scripts\backup_restore.py'
