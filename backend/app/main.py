@@ -186,11 +186,7 @@ def track_background_task(app: FastAPI, task: asyncio.Task[Any]) -> None:
 
 
 def recover_interrupted_jobs(app: FastAPI, store: JsonStore | SqlAlchemyStore, settings: Settings) -> int:
-    """Restart interrupted audio jobs from their immutable source file.
-
-    The audio pipeline is deterministic from the uploaded source. Re-running it is
-    safer than guessing which partially written intermediate artifact is complete.
-    """
+    """Resume interrupted jobs from the latest source-bound atomic checkpoint."""
     recovered = 0
     for meeting in store.list_meetings():
         job = meeting.get("job") or {}
@@ -210,8 +206,8 @@ def recover_interrupted_jobs(app: FastAPI, store: JsonStore | SqlAlchemyStore, s
         job.update({
             "stage": "QUEUED",
             "progress": 8,
-            "message": "检测到上次处理中断，正在从原始音频重新开始",
-            "warning": "任务由服务启动恢复；为保证产物一致性，将重新执行音频处理。",
+            "message": "检测到上次处理中断，正在从最近有效阶段检查点恢复",
+            "warning": "任务由服务启动自动恢复；只复用与原始音频和当前配置匹配的完整阶段产物。",
             "error": None,
             "error_code": None,
             "retry_count": int(job.get("retry_count", 0)) + 1,
@@ -857,7 +853,9 @@ async def run_transcription_job(
     language = os.getenv("MEETINGMIND_WHISPER_LANGUAGE", "zh")
 
     def report_stage(stage: str) -> None:
-        if stage == "DIARIZING":
+        if stage == "PREPROCESSING":
+            update_job(store, meeting_id, stage=stage, progress=22, message="正在使用 FFmpeg 规范化音频")
+        elif stage == "DIARIZING":
             update_job(store, meeting_id, stage=stage, progress=78, message="WhisperX 对齐完成，正在执行说话人分离")
         elif stage == "ALIGNING":
             update_job(store, meeting_id, stage=stage, progress=67, message="WhisperX 转录完成，正在进行词级时间对齐")
@@ -865,7 +863,9 @@ async def run_transcription_job(
             update_job(store, meeting_id, stage="TRANSCRIBING", progress=48, message="FFmpeg 规范化完成，正在执行 WhisperX 转录")
 
     try:
-        update_job(store, meeting_id, stage="PREPROCESSING", progress=22, message="正在使用 FFmpeg 规范化音频")
+        retry_count = int(meeting.get("job", {}).get("retry_count", 0))
+        if retry_count == 0:
+            update_job(store, meeting_id, stage="PREPROCESSING", progress=22, message="正在使用 FFmpeg 规范化音频")
         result = await asyncio.to_thread(
             transcribe_audio,
             input_path,
@@ -879,6 +879,8 @@ async def run_transcription_job(
             diarization_model=settings.diarization_model,
             num_speakers=meeting.get("expected_speakers"),
             max_audio_duration_minutes=settings.max_audio_duration_minutes,
+            resume=retry_count > 0,
+            source_sha256=meeting.get("sha256"),
         )
         current = store.get_meeting(meeting_id)
         if current is None:
@@ -888,7 +890,10 @@ async def run_transcription_job(
 
         warnings: list[str] = []
         if int(current.get("job", {}).get("retry_count", 0)) > 0:
-            warnings.append("该任务曾在服务启动时自动恢复；为保证产物一致性，已从原始音频重新执行。")
+            if result.resumed_from_stage:
+                warnings.append(f"该任务已从最近有效检查点继续：{result.resumed_from_stage}。")
+            else:
+                warnings.append("该任务已执行恢复；未发现可复用检查点，因此从最早必要阶段重新处理。")
         if settings.diarization_enabled:
             if result.diarization_applied:
                 diarization_status = "SUCCEEDED"

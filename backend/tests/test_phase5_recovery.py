@@ -77,7 +77,7 @@ def wait_until_terminal(client: TestClient, job_id: str, timeout: float = 5) -> 
     return client.get(f"/api/v1/jobs/{job_id}").json()
 
 
-def test_startup_recovers_interrupted_audio_job_from_source(tmp_path: Path, monkeypatch) -> None:
+def test_startup_recovers_interrupted_audio_job_from_latest_checkpoint(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(main, "transcribe_audio", fake_transcribe)
     app = create_app(tmp_path / "runtime")
     meeting = interrupted_meeting()
@@ -89,7 +89,7 @@ def test_startup_recovers_interrupted_audio_job_from_source(tmp_path: Path, monk
         job = wait_until_terminal(client, meeting["job"]["id"])
         assert job["stage"] == "SUCCEEDED"
         assert job["retry_count"] == 1
-        assert "服务启动时自动恢复" in job["warning"]
+        assert "执行恢复" in job["warning"]
         restored = client.get(f"/api/v1/meetings/{meeting['id']}").json()
         assert restored["transcript"][0]["text"] == "恢复后的转录"
 

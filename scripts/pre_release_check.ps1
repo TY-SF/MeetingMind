@@ -9,8 +9,9 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$python = Join-Path $root 'backend\.venv\Scripts\python.exe'
-$alembic = Join-Path $root 'backend\.venv\Scripts\alembic.exe'
+$venv = if (Test-Path (Join-Path $root '.venv\Scripts\python.exe')) { Join-Path $root '.venv' } else { Join-Path $root 'backend\.venv' }
+$python = Join-Path $venv 'Scripts\python.exe'
+$alembic = Join-Path $venv 'Scripts\alembic.exe'
 $envFile = Join-Path $root 'backend\.env\meetingmind.env'
 $failures = [System.Collections.Generic.List[string]]::new()
 $warnings = [System.Collections.Generic.List[string]]::new()
@@ -153,6 +154,7 @@ try {
 
 $env:PYTHONPATH = Join-Path $root 'backend'
 Invoke-External 'Git 候选文件安全审查' { & $python (Join-Path $root 'scripts\repository_audit.py') }
+Invoke-External 'Git 完整历史敏感信息审查' { & $python (Join-Path $root 'scripts\git_history_audit.py') }
 Invoke-External 'Alembic 迁移升级到 head' { & $alembic -c (Join-Path $root 'backend\alembic.ini') upgrade head }
 try {
     $heads = (& $alembic -c (Join-Path $root 'backend\alembic.ini') heads 2>&1 | Out-String).Trim()

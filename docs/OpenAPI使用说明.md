@@ -84,7 +84,7 @@ Worker 缺失不会让 API 假装任务已处理；处理页会显示启动提�
 QUEUED → PREPROCESSING → TRANSCRIBING → ALIGNING → DIARIZING → SUCCEEDED
 ```
 
-`stage_events` 保存每次阶段的真实开始时间、结束时间、耗时和自动恢复尝试编号。服务中断后，系统会从不可变的原始音频重新执行可恢复任务；RQ Worker 异常退出时，任务会被对账为 `FAILED`，错误码为 `QUEUE_JOB_INTERRUPTED` 或 `QUEUE_JOB_FAILED`，之后可调用重试接口。
+`stage_events` 保存每次阶段的真实开始时间、结束时间、耗时和自动恢复尝试编号。服务中断后，系统会验证源文件 SHA-256 与处理配置，并从最近一个原子写入的有效阶段检查点继续；RQ Worker 异常退出时，任务会被对账为 `FAILED`，错误码为 `QUEUE_JOB_INTERRUPTED` 或 `QUEUE_JOB_FAILED`，之后可调用重试接口。
 
 `diarization_status` 不应通过 `SPEAKER_00` 是否存在来推断，因为单人会议也可能只有一个标签：
 

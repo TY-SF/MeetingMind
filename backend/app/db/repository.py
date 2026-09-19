@@ -125,7 +125,7 @@ class SqlAlchemyMeetingRepository:
         job.rq_job_id = None
         job.error_code = None
         job.error_message = None
-        job.warning_message = "任务正在人工重试；将从原始音频重新执行。"
+        job.warning_message = "任务正在人工重试；将从最近有效阶段检查点继续。"
         job.status_message = "任务已重新进入队列"
         job.updated_at = now
         job.finished_at = None

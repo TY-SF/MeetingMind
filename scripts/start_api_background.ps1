@@ -6,7 +6,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$python = Join-Path $root 'backend\.venv\Scripts\python.exe'
+$venv = if (Test-Path (Join-Path $root '.venv\Scripts\python.exe')) { Join-Path $root '.venv' } else { Join-Path $root 'backend\.venv' }
+$python = Join-Path $venv 'Scripts\python.exe'
 $logs = Join-Path $root 'data\logs'
 New-Item -ItemType Directory -Force -Path $logs | Out-Null
 if (-not (Test-Path -LiteralPath $python)) { throw "未找到后端 Python：$python" }

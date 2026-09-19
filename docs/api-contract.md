@@ -54,7 +54,7 @@ VITE_API_BASE_URL=http://你的后端地址/api/v1
 - `diarization_status: NOT_RUN | SUCCEEDED | DEGRADED | DISABLED`：自动说话人分离的明确结果，不能通过标签数量推断；
 - `speaker_count: number`：本次自动分离识别到的说话人数。
 
-服务启动时只恢复处于 `PROCESSING` 且阶段为 `QUEUED`、`PREPROCESSING`、`TRANSCRIBING` 或 `DIARIZING` 的音频任务。恢复始终从已保存的原始音频重新执行，不信任可能只写入一半的中间文件；若原始音频不存在，任务终止为 `FAILED / SOURCE_FILE_MISSING`。
+服务启动时只恢复处于 `PROCESSING` 且阶段为 `QUEUED`、`PREPROCESSING`、`TRANSCRIBING`、`ALIGNING` 或 `DIARIZING` 的音频任务。规范化、转录和对齐产物采用原子写入，并绑定源文件 SHA-256 与处理配置；恢复时从最近一个匹配且完整的检查点继续，损坏或不匹配的检查点会被拒绝。若原始音频不存在，任务终止为 `FAILED / SOURCE_FILE_MISSING`。
 
 
 ## OpenAPI 与第五阶段分离语义

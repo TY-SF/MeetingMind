@@ -10,7 +10,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $root = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-$python = Join-Path $root 'backend\.venv\Scripts\python.exe'
+$venv = if (Test-Path (Join-Path $root '.venv\Scripts\python.exe')) { Join-Path $root '.venv' } else { Join-Path $root 'backend\.venv' }
+$python = Join-Path $venv 'Scripts\python.exe'
 $cli = Join-Path $root 'scripts\backup_restore.py'
 if (-not (Test-Path -LiteralPath $python)) { throw "未找到后端 Python：$python" }
 if (-not (Test-Path -LiteralPath $cli)) { throw "未找到备份工具：$cli" }

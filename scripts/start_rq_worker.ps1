@@ -6,10 +6,11 @@ param(
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
-$python = Join-Path $root "backend\.venv\Scripts\python.exe"
-$rq = Join-Path $root "backend\.venv\Scripts\rq.exe"
+$venv = if (Test-Path (Join-Path $root ".venv\Scripts\python.exe")) { Join-Path $root ".venv" } else { Join-Path $root "backend\.venv" }
+$python = Join-Path $venv "Scripts\python.exe"
+$rq = Join-Path $venv "Scripts\rq.exe"
 if (-not (Test-Path $python)) { throw "未找到后端虚拟环境：$python" }
-if (-not (Test-Path $rq)) { throw "未找到 RQ 命令：$rq；请先安装 backend/requirements.txt" }
+if (-not (Test-Path $rq)) { throw "未找到 RQ 命令：$rq；请先执行 uv sync --frozen --group dev" }
 
 # RQ 2.6.x 的 SpawnWorker 在 Windows 会调用 os.wait4，而 Windows Python
 # 不提供该 API，导致 Worker 取到任务后立即退出。Windows 默认使用

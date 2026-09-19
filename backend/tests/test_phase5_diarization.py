@@ -109,6 +109,7 @@ def test_transcription_rejects_audio_over_configured_duration_before_model_load(
     monkeypatch.setattr(audio_processor, "find_ffmpeg_bin", lambda: None)
     monkeypatch.setattr(audio_processor, "configure_runtime", lambda _path: None)
     monkeypatch.setattr(audio_processor, "normalize_audio", lambda *_args: 60_001)
+    (tmp_path / "source.wav").write_bytes(b"source")
 
     with __import__("pytest").raises(audio_processor.AudioProcessingError, match="不能超过 1 分钟"):
         audio_processor.transcribe_audio(

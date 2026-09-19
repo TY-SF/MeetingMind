@@ -91,14 +91,15 @@ HF_TOKEN=在本机填写 Hugging Face Token
 
 ## 安装依赖
 
-完整运行环境需要 API 与 WhisperX/pyannote 依赖：
+`pyproject.toml` 和 `uv.lock` 是依赖的权威来源。API、测试和运维脚本使用锁定环境：
 
 ```powershell
 cd D:\MeetingMind
-backend\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+python -m pip install uv==0.12.17
+uv sync --frozen --group dev
 ```
 
-如需指定 CUDA 版本，请先按 `backend/requirements-whisperx.txt` 中的说明安装匹配的 PyTorch/Torchaudio，再安装上述依赖。仅执行不加载音频模型的 API 单元测试时，可只安装 `backend/requirements-api.txt`。
+完整音频运行环境再执行 `uv sync --frozen --group dev --extra whisperx`。如需指定 CUDA 版本，请按 `backend/requirements-whisperx.txt` 的说明，用 `uv pip` 安装匹配的 PyTorch/Torchaudio；`requirements-*.txt` 仅作为兼容说明，不再是 CI 的依赖权威来源。
 
 ## 启动 API
 
@@ -107,7 +108,7 @@ backend\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
 ```powershell
 cd D:\MeetingMind
 $env:PYTHONPATH = "D:\MeetingMind\backend"
-backend\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --reload
+uv run --frozen python -m uvicorn app.main:app --app-dir backend --reload
 ```
 
 - API：`http://127.0.0.1:8000`
@@ -196,7 +197,7 @@ backend\.venv\Scripts\python.exe -m pytest -q
 - Vite 前端真实下载入口和转录页说话人映射编辑器
 - 前端 API 契约、HTTP 映射和错误处理同步更新
 - 说话人映射、Markdown、ICS、导出错误路径自动化测试
-- 服务启动时自动扫描中断的音频任务；源文件存在时从不可变源音频重新执行，缺失时返回稳定错误码 `SOURCE_FILE_MISSING`
+- 服务启动时自动扫描中断任务；源文件存在时校验源文件哈希与当前处理配置，并从最近一个原子写入的有效阶段检查点继续，缺失时返回稳定错误码 `SOURCE_FILE_MISSING`
 - 处理任务返回 `error_code` 和 `retry_count`，前端明确显示自动恢复次数和稳定错误码
 - 三组 Gold Standard 结构化分析评估及可重复执行脚本
 - 2026 年 9 月 9 日使用当前 OpenAI 配置完成三组评估：结构化输出、待办 Precision/Recall、负责人、日期和状态指标在该受控样本上均为 `1.0`

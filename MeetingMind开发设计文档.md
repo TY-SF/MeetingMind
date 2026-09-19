@@ -928,20 +928,20 @@ error_code
 
 ## 32. GitHub 发布清单
 
-- [ ] 仓库名使用 `meetingmind`
-- [ ] 添加 `README.md` 和 `README.zh-CN.md`
-- [ ] 添加 MIT License
-- [ ] 添加 `.env.example`
-- [ ] 确认 `.env` 被忽略
-- [ ] 确认 `data/`、日志和模型缓存被忽略
-- [ ] 扫描当前文件中的 API Key、Token、密码和服务器地址
-- [ ] 检查 Git 历史中的敏感信息
-- [ ] 检查截图和演示 Markdown
-- [ ] 不提交真实会议录音
-- [ ] 不提交 WhisperX 模型文件
-- [ ] 只提交无敏感内容的短演示音频或固定转录 fixture
-- [ ] 确认 README 描述与实际代码一致
-- [ ] 确认简历只写已完成能力
+- [x] 仓库名使用 `meetingmind`
+- [x] 添加 `README.md` 和 `README.zh-CN.md`
+- [x] 添加 MIT License
+- [x] 添加 `.env.example`
+- [x] 确认 `.env` 被忽略
+- [x] 确认 `data/`、日志和模型缓存被忽略
+- [x] 扫描当前文件中的 API Key、Token、密码和服务器地址
+- [x] 检查 Git 历史中的敏感信息
+- [x] 检查截图和演示 Markdown
+- [x] 不提交真实会议录音
+- [x] 不提交 WhisperX 模型文件
+- [x] 只提交无敏感内容的短演示音频或固定转录 fixture
+- [x] 确认 README 描述与实际代码一致
+- [x] 确认简历只写已完成能力
 
 ## 33. 演示脚本
 

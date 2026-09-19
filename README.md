@@ -2,7 +2,7 @@
 
 MeetingMind 是一个本地优先的中文会议音频整理项目。
 
-截至 2026 年 9 月 18 日：
+截至 2026 年 9 月 19 日：
 
 - 第一阶段：FastAPI 最小闭环，已完成
 - 第二阶段：FFmpeg + WhisperX 中文转录，已完成
@@ -16,7 +16,7 @@ MeetingMind 是一个本地优先的中文会议音频整理项目。
 - 第八阶段进行中：访问令牌、HTTPS/Caddy、一致性备份与隔离恢复、有界结构化日志和本地运行监控已完成；下一项为容量、限流与正式多人身份系统
 - Outlook Classic 已完成 ICS 实际导入验收，中文内容和 Asia/Shanghai 时间转换正确
 - 三组非敏感合成音频已完成上传、RQ、WhisperX、pyannote、OpenAI、导出和删除的端到端验收；最新脱敏证据为 `evaluation/reports/day7-e2e-latest.json`
-- GitHub Actions 托管运行仍需在连接远程 GitHub 仓库后取得最新提交的绿色 run 记录
+- GitHub Actions 已连接远程仓库并持续运行；后端测试、完整 Git 历史审计、Gold Standard、Day-7 证据校验、前端测试和生产构建均纳入主分支门禁
 
 
 
@@ -54,20 +54,21 @@ npm run dev
 
 ```powershell
 cd D:\MeetingMind
-backend\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+python -m pip install uv==0.12.17
+uv sync --frozen --group dev
 $env:PYTHONPATH = "D:\MeetingMind\backend"
-backend\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --reload
+uv run --frozen python -m uvicorn app.main:app --app-dir backend --reload
 ```
 
 ## 第五阶段验证摘要
 
-截至 2026 年 9 月 18 日：
+截至 2026 年 9 月 19 日：
 
-- 后端自动化测试：`71 passed`（包含备份/恢复、日志遮盖/轮转和运行监控边界测试）；
+- 后端自动化测试：`73 passed`（包含备份/恢复、日志遮盖/轮转和运行监控边界测试）；
 - 前端 Vitest 单元测试：`18 passed`；
 - 前端类型检查和生产构建：通过；
 - 三组受控 Gold Standard：结构化输出成功率、待办 Precision/Recall、负责人、日期和状态指标均为 `1.0`；
-- 中断音频任务可在服务重启后从原始音频自动恢复；
+- 中断音频任务会校验源文件哈希与处理配置，并从最近一个原子写入的有效阶段检查点继续；
 - Outlook ICS 使用 `VEVENT`、UTF-8 BOM、CRLF 和 UTF-8 字节级折行。
 
 评估样本规模很小，只用于回归和项目验收，不代表生产环境准确率。评估方法与结果见 `D:\MeetingMind\evaluation\README.md` 、`D:\MeetingMind\evaluation\reports\latest.json` 和 `D:\MeetingMind\evaluation\reports\day7-e2e-latest.json`。

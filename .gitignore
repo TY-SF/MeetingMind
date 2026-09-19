@@ -10,6 +10,7 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 backend/.venv/
+.venv/
 
 # Node
 frontend/node_modules/

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import shutil
@@ -43,6 +44,7 @@ class TranscriptionResult:
     diarization_applied: bool = False
     diarization_warning: str | None = None
     speaker_count: int = 1
+    resumed_from_stage: str | None = None
 
 
 def find_ffmpeg_bin() -> Path | None:
@@ -227,6 +229,72 @@ def apply_speaker_diarization(
     return assigned, len(stable_labels)
 
 
+CHECKPOINT_VERSION = 1
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _json_default(value: object) -> object:
+    item = getattr(value, "item", None)
+    if callable(item):
+        return item()
+    raise TypeError(f"{type(value).__name__} is not JSON serializable")
+
+
+def _write_json_atomic(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    try:
+        temporary.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2, default=_json_default),
+            encoding="utf-8",
+        )
+        temporary.replace(path)
+    except (OSError, TypeError, ValueError) as exc:
+        temporary.unlink(missing_ok=True)
+        raise AudioProcessingError(f"无法保存阶段检查点: {path.name}", code="STORAGE_ERROR") from exc
+
+
+def _load_checkpoint(path: Path, *, stage: str, signature: dict) -> dict | None:
+    if not path.is_file():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    if not isinstance(payload, dict):
+        return None
+    if payload.get("checkpoint_version") != CHECKPOINT_VERSION:
+        return None
+    if payload.get("stage") != stage or payload.get("signature") != signature:
+        return None
+    return payload
+
+
+def _segments_from_result(result: dict) -> list[dict]:
+    segments: list[dict] = []
+    for index, segment in enumerate(result.get("segments", []), start=1):
+        text = str(segment.get("text", "")).strip()
+        if not text:
+            continue
+        segments.append(
+            {
+                "id": f"segment-{index:04d}",
+                "speaker": str(segment.get("speaker") or "SPEAKER_00"),
+                "start_ms": max(0, round(float(segment.get("start", 0)) * 1000)),
+                "end_ms": max(0, round(float(segment.get("end", 0)) * 1000)),
+                "text": text,
+            }
+        )
+    return segments
+
+
 def transcribe_audio(
     input_path: Path,
     working_dir: Path,
@@ -241,46 +309,138 @@ def transcribe_audio(
     diarization_model: str = "pyannote/speaker-diarization-community-1",
     num_speakers: int | None = None,
     max_audio_duration_minutes: int | None = None,
+    resume: bool = False,
+    source_sha256: str | None = None,
 ) -> TranscriptionResult:
-    """Normalize and transcribe one file with the already validated WhisperX chain."""
+    """Run the audio pipeline and resume from the latest valid stage checkpoint.
+
+    Stage outputs are written atomically below ``working_dir``. A retry only reuses
+    a checkpoint when its source hash and processing configuration match, so a
+    corrupt, stale, or foreign artifact can never silently skip required work.
+    """
     ffmpeg_bin = find_ffmpeg_bin()
     configure_runtime(ffmpeg_bin)
+
+    working_dir.mkdir(parents=True, exist_ok=True)
+    results_dir.mkdir(parents=True, exist_ok=True)
+    normalized_path = working_dir / "normalized.wav"
+    preprocessing_checkpoint = working_dir / "preprocessing.checkpoint.json"
+    transcription_checkpoint = working_dir / "transcribing.checkpoint.json"
+    alignment_checkpoint = working_dir / "aligning.checkpoint.json"
+    transcript_path = results_dir / "transcript.json"
+
+    signature = {
+        "source_sha256": source_sha256 or _sha256_file(input_path),
+        "model": model_name,
+        "language": language,
+        "diarization_enabled": diarization_enabled,
+        "diarization_model": diarization_model if diarization_enabled else None,
+        "num_speakers": num_speakers,
+    }
+    resumed_from_stage: str | None = None
+
+    final_checkpoint = _load_checkpoint(transcript_path, stage="SUCCEEDED", signature=signature) if resume else None
+    if final_checkpoint is not None:
+        segments = final_checkpoint.get("segments")
+        if isinstance(segments, list) and int(final_checkpoint.get("duration_ms") or 0) > 0:
+            return TranscriptionResult(
+                normalized_audio=normalized_path,
+                transcript_path=transcript_path,
+                duration_ms=int(final_checkpoint["duration_ms"]),
+                segments=segments,
+                model=str(final_checkpoint.get("model") or model_name),
+                device=str(final_checkpoint.get("device") or "unknown"),
+                compute_type=str(final_checkpoint.get("compute_type") or "unknown"),
+                language=final_checkpoint.get("language") or language,
+                ffmpeg_bin=str(ffmpeg_bin) if ffmpeg_bin else None,
+                diarization_applied=bool(final_checkpoint.get("diarization_applied")),
+                diarization_warning=final_checkpoint.get("diarization_warning"),
+                speaker_count=int(final_checkpoint.get("speaker_count") or 1),
+                resumed_from_stage="SUCCEEDED",
+            )
+
+    preprocessing = _load_checkpoint(preprocessing_checkpoint, stage="PREPROCESSING", signature=signature) if resume else None
+    if preprocessing is not None and normalized_path.is_file():
+        duration_ms = int(preprocessing.get("duration_ms") or 0)
+        normalized_sha256 = str(preprocessing.get("normalized_sha256") or "")
+        if duration_ms <= 0 or not normalized_sha256 or _sha256_file(normalized_path) != normalized_sha256:
+            preprocessing = None
+    if preprocessing is None:
+        if stage_callback is not None:
+            stage_callback("PREPROCESSING")
+        duration_ms = normalize_audio(input_path, normalized_path, ffmpeg_bin)
+        if max_audio_duration_minutes is not None and duration_ms > max_audio_duration_minutes * 60 * 1000:
+            raise AudioProcessingError(f"音频时长不能超过 {max_audio_duration_minutes} 分钟", code="AUDIO_TOO_LONG")
+        _write_json_atomic(
+            preprocessing_checkpoint,
+            {
+                "checkpoint_version": CHECKPOINT_VERSION,
+                "stage": "PREPROCESSING",
+                "signature": signature,
+                "duration_ms": duration_ms,
+                "normalized_sha256": _sha256_file(normalized_path),
+            },
+        )
+    else:
+        resumed_from_stage = "TRANSCRIBING"
+
     try:
         import torch
         import whisperx
     except ImportError as exc:
         raise AudioProcessingError("当前虚拟环境未安装 torch 或 whisperx") from exc
 
-    normalized_path = working_dir / "normalized.wav"
-    transcript_path = results_dir / "transcript.json"
-    duration_ms = normalize_audio(input_path, normalized_path, ffmpeg_bin)
-    if max_audio_duration_minutes is not None and duration_ms > max_audio_duration_minutes * 60 * 1000:
-        raise AudioProcessingError(f"音频时长不能超过 {max_audio_duration_minutes} 分钟", code="AUDIO_TOO_LONG")
-    if stage_callback is not None:
-        stage_callback("TRANSCRIBING")
     device = "cuda" if torch.cuda.is_available() else "cpu"
     compute_type = "float16" if device == "cuda" else "int8"
+    audio = whisperx.load_audio(str(normalized_path))
 
-    try:
-        audio = whisperx.load_audio(str(normalized_path))
-        model = whisperx.load_model(model_name, device=device, compute_type=compute_type, language=language)
-        result = model.transcribe(audio, batch_size=batch_size, language=language)
-    except Exception as exc:
-        raise AudioProcessingError(f"WhisperX 转录失败: {exc}") from exc
+    transcription = _load_checkpoint(transcription_checkpoint, stage="TRANSCRIBING", signature=signature) if resume else None
+    result = transcription.get("result") if transcription is not None else None
+    if not isinstance(result, dict):
+        if stage_callback is not None:
+            stage_callback("TRANSCRIBING")
+        try:
+            model = whisperx.load_model(model_name, device=device, compute_type=compute_type, language=language)
+            result = model.transcribe(audio, batch_size=batch_size, language=language)
+        except Exception as exc:
+            raise AudioProcessingError(f"WhisperX 转录失败: {exc}") from exc
+        _write_json_atomic(
+            transcription_checkpoint,
+            {
+                "checkpoint_version": CHECKPOINT_VERSION,
+                "stage": "TRANSCRIBING",
+                "signature": signature,
+                "result": result,
+            },
+        )
+    elif resumed_from_stage is None or resumed_from_stage == "TRANSCRIBING":
+        resumed_from_stage = "ALIGNING"
 
-    # WhisperX alignment refines word/segment timing and is required before
-    # assigning diarization labels. If a language alignment model is unavailable,
-    # retain the original transcript rather than losing a successful ASR result.
-    try:
+    alignment = _load_checkpoint(alignment_checkpoint, stage="ALIGNING", signature=signature) if resume else None
+    aligned_result = alignment.get("result") if alignment is not None else None
+    if not isinstance(aligned_result, dict):
         if stage_callback is not None:
             stage_callback("ALIGNING")
-        align_model, align_metadata = whisperx.load_align_model(language_code=result.get("language") or language, device=device)
-        result = whisperx.align(
-            result.get("segments", []), align_model, align_metadata, audio, device,
-            return_char_alignments=False,
+        try:
+            align_model, align_metadata = whisperx.load_align_model(language_code=result.get("language") or language, device=device)
+            aligned_result = whisperx.align(
+                result.get("segments", []), align_model, align_metadata, audio, device,
+                return_char_alignments=False,
+            )
+        except Exception as exc:
+            raise AudioProcessingError(f"WhisperX 时间对齐失败: {exc}", code="WHISPERX_ALIGNMENT_FAILED") from exc
+        _write_json_atomic(
+            alignment_checkpoint,
+            {
+                "checkpoint_version": CHECKPOINT_VERSION,
+                "stage": "ALIGNING",
+                "signature": signature,
+                "result": aligned_result,
+            },
         )
-    except Exception as exc:
-        raise AudioProcessingError(f"WhisperX 时间对齐失败: {exc}", code="WHISPERX_ALIGNMENT_FAILED") from exc
+    else:
+        resumed_from_stage = "DIARIZING"
+    result = aligned_result
 
     diarization_applied = False
     diarization_warning = None
@@ -304,22 +464,11 @@ def transcribe_audio(
             except SpeakerDiarizationError as exc:
                 diarization_warning = str(exc)
 
-    segments = []
-    for index, segment in enumerate(result.get("segments", []), start=1):
-        text = str(segment.get("text", "")).strip()
-        if not text:
-            continue
-        segments.append(
-            {
-                "id": f"segment-{index:04d}",
-                "speaker": str(segment.get("speaker") or "SPEAKER_00"),
-                "start_ms": max(0, round(float(segment.get("start", 0)) * 1000)),
-                "end_ms": max(0, round(float(segment.get("end", 0)) * 1000)),
-                "text": text,
-            }
-        )
-
+    segments = _segments_from_result(result)
     payload = {
+        "checkpoint_version": CHECKPOINT_VERSION,
+        "stage": "SUCCEEDED",
+        "signature": signature,
         "input": str(input_path),
         "normalized_audio": str(normalized_path),
         "model": model_name,
@@ -332,8 +481,7 @@ def transcribe_audio(
         "speaker_count": speaker_count,
         "segments": segments,
     }
-    results_dir.mkdir(parents=True, exist_ok=True)
-    transcript_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    _write_json_atomic(transcript_path, payload)
     return TranscriptionResult(
         normalized_audio=normalized_path,
         transcript_path=transcript_path,
@@ -347,4 +495,5 @@ def transcribe_audio(
         diarization_applied=diarization_applied,
         diarization_warning=diarization_warning,
         speaker_count=speaker_count,
+        resumed_from_stage=resumed_from_stage,
     )
