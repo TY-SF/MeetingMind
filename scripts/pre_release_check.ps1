@@ -157,8 +157,8 @@ Invoke-External 'Git 候选文件安全审查' { & $python (Join-Path $root 'scr
 Invoke-External 'Git 完整历史敏感信息审查' { & $python (Join-Path $root 'scripts\git_history_audit.py') }
 Invoke-External 'Alembic 迁移升级到 head' { & $alembic -c (Join-Path $root 'backend\alembic.ini') upgrade head }
 try {
-    $heads = (& $alembic -c (Join-Path $root 'backend\alembic.ini') heads 2>&1 | Out-String).Trim()
-    $current = (& $alembic -c (Join-Path $root 'backend\alembic.ini') current 2>&1 | Out-String).Trim()
+    $heads = (& $alembic -c (Join-Path $root 'backend\alembic.ini') heads 2>$null | Out-String).Trim()
+    $current = (& $alembic -c (Join-Path $root 'backend\alembic.ini') current 2>$null | Out-String).Trim()
     $headLine = $heads -split '\r?\n' | Where-Object { $_ -match '\(head\)' } | Select-Object -First 1
     $headRevision = if ($headLine) { ($headLine -split '\s+')[0] } else { $null }
     if (-not $headRevision -or $current -notmatch [regex]::Escape($headRevision)) { throw "当前迁移未处于 head（head=$headRevision）" }
