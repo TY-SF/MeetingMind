@@ -159,7 +159,8 @@ Invoke-External 'Alembic 迁移升级到 head' { & $alembic -c (Join-Path $root 
 try {
     $heads = (& $alembic -c (Join-Path $root 'backend\alembic.ini') heads 2>&1 | Out-String).Trim()
     $current = (& $alembic -c (Join-Path $root 'backend\alembic.ini') current 2>&1 | Out-String).Trim()
-    $headRevision = ($heads -split '\r?\n' | Where-Object { $_ -match '^\w+' } | Select-Object -First 1).Split(' ')[0]
+    $headLine = $heads -split '\r?\n' | Where-Object { $_ -match '\(head\)' } | Select-Object -First 1
+    $headRevision = if ($headLine) { ($headLine -split '\s+')[0] } else { $null }
     if (-not $headRevision -or $current -notmatch [regex]::Escape($headRevision)) { throw "当前迁移未处于 head（head=$headRevision）" }
     Write-Pass "数据库迁移位于 head：$headRevision"
 } catch {
