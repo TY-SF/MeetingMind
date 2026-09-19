@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [switch]$SkipFrontend,
     [switch]$SkipLiveServer,
@@ -9,7 +9,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$venv = if (Test-Path (Join-Path $root '.venv\Scripts\python.exe')) { Join-Path $root '.venv' } else { Join-Path $root 'backend\.venv' }
+$venv = (& (Join-Path $root 'scripts\resolve_runtime_venv.ps1') | Select-Object -Last 1).Trim()
 $python = Join-Path $venv 'Scripts\python.exe'
 $alembic = Join-Path $venv 'Scripts\alembic.exe'
 $envFile = Join-Path $root 'backend\.env\meetingmind.env'

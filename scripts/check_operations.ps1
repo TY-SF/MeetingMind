@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [string]$BaseUrl = 'https://localhost:8443',
     [switch]$TrustLocalCaddyCA,
@@ -9,7 +9,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$venv = if (Test-Path (Join-Path $root '.venv\Scripts\python.exe')) { Join-Path $root '.venv' } else { Join-Path $root 'backend\.venv' }
+$venv = (& (Join-Path $root 'scripts\resolve_runtime_venv.ps1') | Select-Object -Last 1).Trim()
 $python = Join-Path $venv 'Scripts\python.exe'
 $script = Join-Path $root 'scripts\check_operations.py'
 if (-not (Test-Path -LiteralPath $python)) { throw "未找到后端 Python：$python" }

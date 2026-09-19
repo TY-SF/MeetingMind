@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [string]$DataDir = (Join-Path $PSScriptRoot '..\data'),
     [string]$Container = 'meetingmind-mysql',

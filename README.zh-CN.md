@@ -29,6 +29,35 @@ MeetingMind 是一个本地优先的中文会议音频整理项目。
 
 隐私、外部模型传输与无自动脱敏边界见 `D:\MeetingMind\docs\隐私与数据边界.md`。 访问控制与部署边界见 `D:\MeetingMind\docs\访问控制与部署边界.md`。 HTTPS 与反向代理见 `D:\MeetingMind\docs\HTTPS与反向代理.md`。 备份与恢复边界见 `D:\MeetingMind\docs\数据库与会议文件备份恢复.md`。 日志与监控边界见 `D:\MeetingMind\docs\日志保留监控与告警.md`。 验证记录见 `D:\MeetingMind\docs\HTTPS反向代理验证记录-2026-09-17.md`。 验证记录见 `D:\MeetingMind\docs\访问控制验证记录-2026-09-17.md`。 验证记录见 `D:\MeetingMind\docs\隐私数据边界验证记录-2026-09-17.md`。
 
+## 本机完整启动（推荐）
+
+不要直接调用系统 `python`，也不要手工猜测 `.venv`。项目启动入口会自动选择已验证的完整音频运行环境（当前本机为 `backend\.venv`，包含 CUDA 版 PyTorch、WhisperX 和 pyannote）。
+
+完整后台服务、生产前端和本机 HTTPS 一键启动：
+
+```powershell
+cd D:\MeetingMind
+.\scripts\start_local_stack.ps1 -WithHttps
+```
+
+脚本会依次启动并检查 MySQL、Redis，执行数据库迁移，启动 FastAPI 和 RQ Worker，构建前端并启动 Caddy。完成后访问：
+
+```text
+https://localhost:8443
+```
+
+仅启动后端、Redis/RQ 和音频 Worker，并使用 Vite 开发前端：
+
+```powershell
+cd D:\MeetingMind
+.\scripts\start_local_stack.ps1
+
+# 另开一个 PowerShell
+cd D:\MeetingMind\frontend
+npm run dev
+```
+
+开发前端地址为 `http://localhost:5173`。业务接口启用了访问令牌时，在页面右上角输入 `backend\.env\meetingmind.env` 中的 `MEETINGMIND_API_TOKEN`；不要把令牌复制到源码或提交到 Git。
 ## 前端快速启动
 
 先启动后端，再启动前端。前端会把 `/api` 请求代理到 `http://127.0.0.1:8000`：
@@ -43,10 +72,9 @@ npm run dev
 
 ```powershell
 cd D:\MeetingMind
-python -m pip install uv==0.12.17
-uv sync --frozen --group dev
 $env:PYTHONPATH = "D:\MeetingMind\backend"
-uv run --frozen python -m uvicorn app.main:app --app-dir backend --reload
+$venv = (& .\scripts\resolve_runtime_venv.ps1 -RequireAudio | Select-Object -Last 1).Trim()
+& (Join-Path $venv 'Scripts\python.exe') -m uvicorn app.main:app --app-dir backend --reload
 ```
 
 ## 第五阶段验证摘要
@@ -72,5 +100,5 @@ uv run --frozen python -m uvicorn app.main:app --app-dir backend --reload
 ```powershell
 cd D:\MeetingMind
 $env:PYTHONPATH = "D:\MeetingMind\backend"
-backend\.venv\Scripts\alembic -c backend\alembic.ini upgrade head
+.\scripts\resolve_runtime_venv.ps1 | ForEach-Object { & (Join-Path $_ 'Scripts\alembic.exe') -c backend\alembic.ini upgrade head }
 ```

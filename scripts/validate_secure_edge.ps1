@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $composeEnv = Join-Path $root '.env.compose'
 $localCaddyfile = Join-Path $root 'deploy\Caddyfile.local'

@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [string]$HostAddress = '127.0.0.1',
     [int]$Port = 8000
@@ -6,7 +6,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$venv = if (Test-Path (Join-Path $root '.venv\Scripts\python.exe')) { Join-Path $root '.venv' } else { Join-Path $root 'backend\.venv' }
+$venv = (& (Join-Path $root 'scripts\resolve_runtime_venv.ps1') -RequireAudio | Select-Object -Last 1).Trim()
 $python = Join-Path $venv 'Scripts\python.exe'
 $logs = Join-Path $root 'data\logs'
 New-Item -ItemType Directory -Force -Path $logs | Out-Null

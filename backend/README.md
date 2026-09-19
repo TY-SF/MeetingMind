@@ -21,7 +21,7 @@
 - 真实中文 MP3 的 WhisperX 转录 → OpenAI 结构化分析 → MySQL 持久化
 - 真实人工审核 PATCH、过期版本 `409` 与测试记录删除验证
 
-当前自动化测试结果：`57 passed`（2026 年 9 月 17 日本机 HTTPS 边界检查）。
+当前自动化测试结果：`73 passed`（2026 年 9 月 19 日完整本机运行环境复验）。
 
 ## 数据库
 
@@ -99,7 +99,20 @@ python -m pip install uv==0.12.17
 uv sync --frozen --group dev
 ```
 
-完整音频运行环境再执行 `uv sync --frozen --group dev --extra whisperx`。如需指定 CUDA 版本，请按 `backend/requirements-whisperx.txt` 的说明，用 `uv pip` 安装匹配的 PyTorch/Torchaudio；`requirements-*.txt` 仅作为兼容说明，不再是 CI 的依赖权威来源。
+完整音频运行环境由 `scripts\resolve_runtime_venv.ps1 -RequireAudio` 自动选择。当前本机已验证的 GPU 运行环境是 `backend\.venv`，而根目录 `.venv` 可用于锁定依赖和 CI 基础检查；启动脚本不会再因为根目录环境存在而误选 CPU/基础环境。
+
+只有重建完整音频环境时才需要执行以下命令：
+
+```powershell
+cd D:\MeetingMind
+$env:UV_PROJECT_ENVIRONMENT = "$PWD\backend\.venv"
+uv sync --frozen --group dev --extra whisperx
+uv pip install --python backend\.venv\Scripts\python.exe --reinstall torch==2.8.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cu128
+.\backend\.venv\Scripts\python.exe scripts\check_audio_runtime.py
+Remove-Item Env:UV_PROJECT_ENVIRONMENT
+```
+
+最后一条验证应输出 `audio-gpu`。`requirements-*.txt` 仅作为兼容说明，不再是 CI 的依赖权威来源。
 
 ## 启动 API
 
@@ -108,7 +121,8 @@ uv sync --frozen --group dev
 ```powershell
 cd D:\MeetingMind
 $env:PYTHONPATH = "D:\MeetingMind\backend"
-uv run --frozen python -m uvicorn app.main:app --app-dir backend --reload
+$venv = (& .\scripts\resolve_runtime_venv.ps1 -RequireAudio | Select-Object -Last 1).Trim()
+& (Join-Path $venv 'Scripts\python.exe') -m uvicorn app.main:app --app-dir backend --reload
 ```
 
 - API：`http://127.0.0.1:8000`
@@ -168,8 +182,8 @@ PATCH /api/v1/meetings/{meeting_id}/analysis
 ```powershell
 cd D:\MeetingMind
 $env:PYTHONPATH = "D:\MeetingMind\backend"
-backend\.venv\Scripts\alembic -c backend\alembic.ini upgrade head
-backend\.venv\Scripts\alembic -c backend\alembic.ini current
+.\scripts\resolve_runtime_venv.ps1 | ForEach-Object { & (Join-Path $_ 'Scripts\alembic.exe') -c backend\alembic.ini upgrade head }
+.\scripts\resolve_runtime_venv.ps1 | ForEach-Object { & (Join-Path $_ 'Scripts\alembic.exe') -c backend\alembic.ini current }
 ```
 
 当前迁移版本：`0007_one_job_per_meeting`。第五阶段使用独立迁移新增阶段耗时事件表，并为时间边界保留微秒精度；不要修改已经应用的旧迁移。
@@ -179,7 +193,7 @@ backend\.venv\Scripts\alembic -c backend\alembic.ini current
 ```powershell
 cd D:\MeetingMind
 $env:PYTHONPATH = "D:\MeetingMind\backend"
-backend\.venv\Scripts\python.exe -m pytest -q
+$venv = (& .\scripts\resolve_runtime_venv.ps1 | Select-Object -Last 1).Trim(); & (Join-Path $venv 'Scripts\python.exe') -m pytest -q
 ```
 
 覆盖：上传 API、SQLite/MySQL Repository 基础行为、日期解析、结构化分析规范化、超长输入、分析持久化、替换旧结果、乐观锁冲突、人工审核 PATCH、无 API Key 错误路径。
