@@ -1,5 +1,7 @@
 # MeetingMind
 
+[![MeetingMind CI](https://github.com/TY-SF/meetingmind/actions/workflows/ci.yml/badge.svg)](https://github.com/TY-SF/meetingmind/actions/workflows/ci.yml)
+
 MeetingMind 是一个本地优先的中文会议音频整理项目。
 
 截至 2026 年 9 月 19 日：
